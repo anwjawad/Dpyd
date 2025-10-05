@@ -7,6 +7,17 @@
   function byId(id){ return document.getElementById(id); }
   function pad2(n){ return String(n).padStart(2,'0'); }
 
+  // Debounce عام
+  function debounce(fn, wait){
+    let t;
+    return function debounced(/* ...args */){
+      const ctx = this, args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(ctx, args); }, wait);
+    };
+  }
+
+  // ===== Normalizers =====
   function toDMY(val){
     // نحاول إعادة الاستخدام لو عندك Normalizer مشترك
     if (window.DomHelpers && typeof DomHelpers.normalizeToDMY==='function'){
@@ -43,28 +54,36 @@
   function valOf(id){ return getVal(byId(id)); }
   function firstVal(){ for (let i=0;i<arguments.length;i++){ const v=valOf(arguments[i]); if (v!=='') return v; } return ''; }
 
+  // ===== كاش محلي للجدول + دوال رسم سريعة =====
+  let SAVED_CACHE = [];   // نضمن نسخة محلية نقدر نعمل عليها optimistic
+  function paintSavedFromCache(){
+    const tableSel = document.getElementById('saved-assessments') ? '#saved-assessments' : '#saved_table';
+    if (window.DomHelpers && DomHelpers.renderSavedAssessments){
+      DomHelpers.renderSavedAssessments({ toolbar:'#saved_toolbar', table: tableSel }, SAVED_CACHE);
+    }
+  }
+
   // ===== تحميل وعرض Saved assessments =====
   async function loadAssessments(){
     if (!window.SheetsAPI || !window.SheetsAPI.fetchAssessments) return [];
     const rows = await window.SheetsAPI.fetchAssessments();
-    return (rows||[]).map(r=>{
+    const mapped = (rows||[]).map(r=>{
       const c = Object.assign({}, r);
       c.assessment_date = toDMY(c.assessment_date);
       c.followup_due    = toDMY(c.followup_due);
       c.first_date_5fu  = toDMY(c.first_date_5fu); // NEW
       return c;
     });
+    SAVED_CACHE = mapped;
+    return mapped;
   }
 
-  async function renderSavedAssessments(){
+  const renderSavedAssessments = debounce(async function(){
     try{
-      const rows = await loadAssessments();
-      const tableSel = document.getElementById('saved-assessments') ? '#saved-assessments' : '#saved_table';
-      if (window.DomHelpers && DomHelpers.renderSavedAssessments){
-        DomHelpers.renderSavedAssessments({ toolbar:'#saved_toolbar', table: tableSel }, rows);
-      }
+      await loadAssessments();
+      paintSavedFromCache();
     }catch(e){ console.error('[init] renderSavedAssessments', e); }
-  }
+  }, 600);
 
   // ===== فتح مودال الهاتف مع تمرير first_date_5fu كملاحظة =====
   window.tryOpenPhone = function(row){
@@ -86,14 +105,26 @@
     }
     if (!confirm('Delete this assessment and all related phone logs?')) return;
     try{
+      // Optimistic: احذف محليًا ثم رندر
+      const before = SAVED_CACHE.slice();
+      SAVED_CACHE = SAVED_CACHE.filter(r => String(r.id) !== String(id));
+      paintSavedFromCache();
+
       const res = await window.SheetsAPI.deleteAssessmentCascade(id);
-      if (res && res.ok !== false){
-        alert('Deleted.');
-        await renderSavedAssessments();
-      }else{
-        alert('Delete failed: ' + (res && res.error || 'unknown'));
+      if (res && res.ok === false){
+        // rollback
+        SAVED_CACHE = before;
+        paintSavedFromCache();
+        alert('Delete failed: ' + (res.error || 'unknown'));
+        return;
       }
-    }catch(e){ console.error(e); alert('Delete failed. See console.'); }
+      // sync حقيقي
+      renderSavedAssessments();
+    }catch(e){
+      console.error(e);
+      alert('Delete failed. See console.');
+      renderSavedAssessments();
+    }
   };
 
   // ===== تحضير Payload للحفظ =====
@@ -149,32 +180,6 @@
     return p;
   }
 
-  // ===== ربط زر الحفظ =====
-  async function tryWireSaveButton(){
-    const candidates = ['btn-save','btn_save','save_entry','btn-save-entry'];
-    let btn = null;
-    for (const id of candidates){ const el = byId(id); if (el){ btn = el; break; } }
-    if (!btn) return;
-
-    btn.addEventListener('click', async (ev)=>{
-      ev.preventDefault();
-      try{
-        if (!window.SheetsAPI || !window.SheetsAPI.saveAssessment) { alert('SheetsAPI not ready'); return; }
-        const payload = guessAssessmentPayload();
-        if (!payload.id){ alert('Please provide patient ID.'); return; }
-        const res = await window.SheetsAPI.saveAssessment(payload);
-        if (res && res.ok === false){
-          alert('Save failed: ' + (res.error || 'unknown'));
-          return;
-        }
-        await renderSavedAssessments();
-        alert('Saved.');
-      }catch(e){
-        console.error('saveAssessment failed', e); alert('Save failed. Check console.');
-      }
-    });
-  }
-
   // ===== زر Reset (إرجاع 1st date 5FU لليوم) =====
   function tryWireResetButton(){
     const btn = byId('btn-reset') || byId('reset_form');
@@ -193,15 +198,79 @@
     });
   }
 
+  // ===== ربط زر الحفظ (Optimistic + Debounced refresh) =====
+  async function tryWireSaveButton(){
+    const candidates = ['btn-save','btn_save','save_entry','btn-save-entry'];
+    let btn = null;
+    for (const id of candidates){ const el = byId(id); if (el){ btn = el; break; } }
+    if (!btn) return;
+
+    btn.addEventListener('click', async (ev)=>{
+      ev.preventDefault();
+      try{
+        if (!window.SheetsAPI || !window.SheetsAPI.saveAssessment) { alert('SheetsAPI not ready'); return; }
+        const payload = guessAssessmentPayload();
+        if (!payload.id){ alert('Please provide patient ID.'); return; }
+
+        // تعطيل الزر + تلميح بصري سريع
+        const prevText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        // --- Optimistic UI ---
+        // كوّن صفًا محليًا من الـpayload (طبّع التواريخ)
+        const optimistic = Object.assign({}, payload);
+        optimistic.assessment_date = toDMY(optimistic.assessment_date || todayDMY());
+        optimistic.followup_due    = toDMY(optimistic.followup_due || '');
+        optimistic.first_date_5fu  = toDMY(optimistic.first_date_5fu || todayDMY());
+
+        // احذف أي صف قديم لنفس id ثم أضِف الجديد في أعلى القائمة
+        SAVED_CACHE = SAVED_CACHE.filter(r => String(r.id||'') !== String(optimistic.id||''));
+        SAVED_CACHE.unshift(optimistic);
+        paintSavedFromCache();
+
+        // الحفظ الحقيقي (JSONP)
+        const res = await window.SheetsAPI.saveAssessment(payload);
+
+        if (res && res.ok === false){
+          // فشل → أعد تحميل حقيقي واسترجع الزر
+          await renderSavedAssessments();
+          alert('Save failed: ' + (res.error || 'unknown'));
+        }else{
+          // نجاح → مزامنة حقيقية (Debounced)
+          renderSavedAssessments();
+        }
+
+        // إعادة حالة الزر
+        btn.disabled = false;
+        btn.textContent = prevText;
+
+      }catch(e){
+        console.error('saveAssessment failed', e);
+        alert('Save failed. Check console.');
+        btn.disabled = false;
+        btn.textContent = 'Save Entry';
+        // اعمل مزامنة كاملة لتصحيح أي تفاؤل زائد
+        renderSavedAssessments();
+      }
+    });
+  }
+
   // ===== إنشاء الحاويات تلقائيًا إن لم تكن موجودة =====
   function ensureHosts(){
     let toolbar = $('#saved_toolbar');
     let table   = $('#saved-assessments') || $('#saved_table');
     if (!toolbar){
-      toolbar = document.createElement('div'); toolbar.id = 'saved_toolbar'; toolbar.className='header-bar container'; document.body.prepend(toolbar);
+      toolbar = document.createElement('div');
+      toolbar.id = 'saved_toolbar';
+      toolbar.className='header-bar container';
+      document.body.prepend(toolbar);
     }
     if (!table){
-      table = document.createElement('div'); table.id='saved_table'; table.className='container mt-2'; document.body.appendChild(table);
+      table = document.createElement('div');
+      table.id='saved_table';
+      table.className='container mt-2';
+      document.body.appendChild(table);
     }
   }
 
@@ -211,7 +280,7 @@
       ensureHosts();
       await tryWireSaveButton();
       tryWireResetButton();
-      await renderSavedAssessments();
+      await renderSavedAssessments(); // أول تحميل (سيحدّه الـdebounce لاحقًا)
     }catch(e){ console.error('[init] bootstrap', e); }
   }
 
