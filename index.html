@@ -42,19 +42,17 @@
 
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 
-    /* ===== NEW: make the form card resizable (drag corner) ===== */
-    #form-card.resizable{
-      /* allow dragging to resize both width & height */
+    /* ===== NEW: make any element with .resizable draggable from the corner ===== */
+    .resizable{
       resize: both;
-      overflow: auto;                /* required for resize to appear */
+      overflow: auto;                /* required for native resize handle */
       min-width: 320px;
       min-height: 260px;
-      max-width: 100%;               /* don't overflow the container horizontally */
-      max-height: 90vh;              /* sensible ceiling */
-      position: relative;            /* for hint position */
+      max-width: 100%;
+      max-height: 90vh;
+      position: relative;
     }
-    /* subtle corner hint (optional) */
-    #form-card.resizable::after{
+    .resizable::after{
       content: "↘ drag to resize";
       position: absolute; right: 10px; bottom: 8px;
       font-size: 11px; color: var(--text-dim);
@@ -69,7 +67,7 @@
   </header>
 
   <main class="container">
-    <!-- ============== FORM CARD ============== -->
+    <!-- ============== FORM CARD (Resizable) ============== -->
     <section class="card resizable" id="form-card" data-resize-key="form-card-size">
       <!-- Tabs -->
       <div class="tabs" role="tablist" aria-label="Assessment Sections">
@@ -327,8 +325,8 @@
       </div>
     </section>
 
-    <!-- ============== SAVED TABLE ============== -->
-    <section class="card table-card">
+    <!-- ============== SAVED TABLE (Resizable) ============== -->
+    <section class="card table-card resizable" id="saved-card" data-resize-key="saved-card-size">
       <div class="card-title">
         <div class="flex items-center gap-2">
           <span class="badge">Saved assessments</span>
@@ -465,12 +463,11 @@
           } else if (found.value === 'Yes'){
             setBarsDisabled(false);
           } else {
-            // قيمة فارغة — لا نغلق
             setBarsDisabled(false);
           }
         };
         found.addEventListener('change', handler);
-        handler(); // مبدئياً
+        handler();
       }
 
       // ===== Quick buttons for Next phone follow-up =====
@@ -482,7 +479,7 @@
         document.querySelectorAll('[data-nw]').forEach(function(btn){
           btn.addEventListener('click', function(){
             var weeks = parseInt(btn.getAttribute('data-nw'),10)||1;
-            var d = new Date(); // من اليوم
+            var d = new Date();
             var out = toYMD(addDays(d, weeks*7));
             inp.value = out;
             inp.dispatchEvent(new Event('change', {bubbles:true}));
@@ -501,34 +498,39 @@
     })();
   </script>
 
-  <!-- ===== NEW: persist the resizable card size across reloads ===== -->
+  <!-- ===== NEW: persist sizes of any .resizable[data-resize-key] across reloads ===== -->
   <script>
     (function(){
-      var el = document.getElementById('form-card');
-      if (!el) return;
-      var key = el.getAttribute('data-resize-key') || 'form-card-size';
+      var els = document.querySelectorAll('.resizable[data-resize-key]');
+      if (!els.length) return;
 
-      // Restore saved size (if any)
-      try {
-        var saved = JSON.parse(localStorage.getItem(key) || '{}');
-        if (saved && typeof saved === 'object') {
-          if (saved.w) el.style.width  = saved.w + 'px';
-          if (saved.h) el.style.height = saved.h + 'px';
-        }
-      } catch(e){}
+      // Restore each element's saved size
+      els.forEach(function(el){
+        var key = el.getAttribute('data-resize-key');
+        try {
+          var saved = JSON.parse(localStorage.getItem(key) || '{}');
+          if (saved && typeof saved === 'object') {
+            if (saved.w) el.style.width  = saved.w + 'px';
+            if (saved.h) el.style.height = saved.h + 'px';
+          }
+        } catch(e){}
+      });
 
-      // Observe changes and save
+      // Observe and persist when size changes
       if (window.ResizeObserver) {
         var ro = new ResizeObserver(function(entries){
           for (var i=0;i<entries.length;i++){
-            var rect = entries[i].target.getBoundingClientRect();
+            var t = entries[i].target;
+            var key = t.getAttribute('data-resize-key');
+            if (!key) continue;
+            var rect = t.getBoundingClientRect();
             localStorage.setItem(key, JSON.stringify({
               w: Math.round(rect.width),
               h: Math.round(rect.height)
             }));
           }
         });
-        ro.observe(el);
+        els.forEach(function(el){ ro.observe(el); });
       }
     })();
   </script>
