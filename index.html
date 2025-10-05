@@ -571,6 +571,22 @@
         }
       }, 50);
     })();
-  </script>
+  <script>
+  (function(){
+    const KEY = 'app.theme';
+    const root = document.body;
+    const saved = localStorage.getItem(KEY);
+    if (saved) root.setAttribute('data-theme', saved);
+
+    // مثال أزرار:
+    function setTheme(t){
+      root.setAttribute('data-theme', t);
+      localStorage.setItem(KEY, t);
+    }
+    // خليه عالمي لو بدك تستخدمه من أي مكان:
+    window.setAppTheme = setTheme;
+  })();
+</script>
+
 </body>
 </html>
