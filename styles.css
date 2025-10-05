@@ -158,3 +158,38 @@ a:hover{ text-decoration: underline; }
 
 /* بادج حانب زر حفظ المودال */
 #ph_due_badge.hidden{ display:none; }
+
+/* =====================================================================
+   NEW — Resizable utility + fixes to allow horizontal resize
+   ===================================================================== */
+
+/* 1) أداة عامة: أي عنصر يحمل .resizable يصبح قابلاً للسحب من الزاوية */
+.resizable{
+  resize: both;
+  overflow: auto;
+  min-width: 320px;
+  min-height: 220px;
+  position: relative;
+  /* مهم: لا نفرض عرض تلقائي 100% حتى لا يمنع التصغير */
+}
+
+/* تلميح بسيط في الزاوية */
+.resizable::after{
+  content: "↘ drag to resize";
+  position: absolute; right: 10px; bottom: 8px;
+  font-size: 11px; color: var(--text-dim);
+  pointer-events: none; user-select: none;
+}
+
+/* 2) خصائص خاصة للكروت القابلة للتغيير حتى يمسك العنصر عرض مستقل */
+#saved-card.resizable,
+#form-card.resizable{
+  display: inline-block;        /* بدل block ليأخذ عرضًا مستقلاً */
+  width: min(100%, 1000px);     /* عرض ابتدائي صريح → يمكّن السحب يمين/يسار */
+  max-width: 100%;              /* لا يتجاوز حدود .container */
+}
+
+/* 3) إن رغبت بتصغيره كثيرًا لا ينكسر المحتوى */
+#saved-card.resizable .table-host{
+  min-width: 600px;             /* يمنع تكسير الجدول بشكل مزعج عند التصغير */
+}
