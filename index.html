@@ -54,22 +54,21 @@
       pointer-events: none; user-select: none;
     }
 
-    /* ===== تخطيط عمودين (الإصلاح: Flex بدل Grid) =====
-       الهدف: إزالة الإزاحة لليمين وتوسيط الكتلة داخل .container */
+    /* ===== تخطيط عمودين: شريط فلتر جانبي يسار + المحتوى الرئيسي يمين ===== */
     .layout-two-cols{
       display:flex;
-      justify-content:center;     /* يوسّط العمودين داخل الحاوية */
+      justify-content:flex-start;  /* ✅ محاذاة لليسار بدل التوسيط */
       align-items:flex-start;
       gap:24px;
     }
     /* على الشاشات الصغيرة يتحول لعمود واحد (الفلتر فوق) */
     @media (max-width: 1200px){
-      .layout-two-cols{ flex-direction:column; align-items:stretch; }
+      .layout-two-cols{ flex-direction: column; align-items: stretch; }
     }
 
     /* صندوق جانبي لاستضافة الفلتر */
     #filters-sidebar{
-      flex:0 0 320px;             /* عرض ثابت للفلتر */
+      flex: 0 0 320px;             /* عرض ثابت للفلتر */
       position: relative;
       min-height: 120px;
     }
@@ -79,10 +78,10 @@
       margin: 0;                    /* نزيل الهوامش الافتراضية */
     }
 
-    /* العمود الأيمن (الفورم + الجدول) بعرض مناسب */
+    /* ✅ العمود الأيمن يأخذ كل المساحة المتبقية بدون حد أقصى يخلق فراغ */
     .layout-two-cols > div{
-      flex:1 1 780px;
-      max-width:900px;
+      flex: 1 1 0;
+      max-width: none;
     }
   </style>
 </head>
