@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>5-FU — Assessment Form</title>
   <link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="themes-glass.css" />
+  <link rel="stylesheet" href="theme-switcher.css" />
+  <link rel="stylesheet" href="themes-glass.css" />
   <style>
     .grade-bar{ display:flex; gap:.4rem; flex-wrap:wrap; }
     .grade-btn{
@@ -41,48 +42,6 @@
     .icon{ width:16px; height:16px; display:inline-block; vertical-align:-3px; margin-right:6px; }
 
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-
-    /* ===== Resizable: تكبير/تصغير من الزاوية + تلميح بسيط ===== */
-    .resizable{
-      resize: both; overflow:auto;
-      min-width: 320px; min-height: 260px; max-height: 90vh; position: relative;
-    }
-    .resizable::after{
-      content: "↘ drag to resize";
-      position: absolute; right: 10px; bottom: 8px;
-      font-size: 11px; color: var(--text-dim);
-      pointer-events: none; user-select: none;
-    }
-
-    /* ===== تخطيط عمودين: شريط فلتر جانبي يسار + المحتوى الرئيسي يمين ===== */
-    .layout-two-cols{
-      display:flex;
-      justify-content:flex-start;  /* ✅ محاذاة لليسار بدل التوسيط */
-      align-items:flex-start;
-      gap:24px;
-    }
-    /* على الشاشات الصغيرة يتحول لعمود واحد (الفلتر فوق) */
-    @media (max-width: 1200px){
-      .layout-two-cols{ flex-direction: column; align-items: stretch; }
-    }
-
-    /* صندوق جانبي لاستضافة الفلتر */
-    #filters-sidebar{
-      flex: 0 0 320px;             /* عرض ثابت للفلتر */
-      position: relative;
-      min-height: 120px;
-    }
-    /* نجعل شريط الفلتر sticky داخل العمود الجانبي */
-    #filters-sidebar .header-bar{
-      position: sticky; top: 12px; z-index: 45;
-      margin: 0;                    /* نزيل الهوامش الافتراضية */
-    }
-
-    /* ✅ العمود الأيمن يأخذ كل المساحة المتبقية بدون حد أقصى يخلق فراغ */
-    .layout-two-cols > div{
-      flex: 1 1 0;
-      max-width: none;
-    }
   </style>
 </head>
 <body>
@@ -91,280 +50,274 @@
     <div class="subtitle muted">Record patient toxicity and follow-up</div>
   </header>
 
-  <main class="container layout-two-cols">
-    <!-- ===== العمود الأيسر: مكان الفلتر ===== -->
-    <aside id="filters-sidebar">
-      <!-- سيتم نقل .header-bar إلى هنا تلقائيًا -->
-    </aside>
+  <main class="container">
+    <!-- ============== FORM CARD ============== -->
+    <section class="card" id="form-card">
+      <!-- Tabs -->
+      <div class="tabs" role="tablist" aria-label="Assessment Sections">
+        <button class="tab-btn" role="tab" aria-selected="true"  aria-controls="tab-patient"   id="tabbtn-patient">🧾 Patient</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-regimen"   id="tabbtn-regimen">🗓️ Regimen & Dates</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tox"       id="tabbtn-tox">🧪 Toxicity</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-decisions" id="tabbtn-decisions">⚖️ Decisions & Notes</button>
+      </div>
 
-    <!-- ===== العمود الأيمن: بقية الصفحة ===== -->
-    <div>
-      <!-- ============== FORM CARD (Resizable) ============== -->
-      <section class="card resizable" id="form-card" data-resize-key="form-card-size">
-        <!-- Tabs -->
-        <div class="tabs" role="tablist" aria-label="Assessment Sections">
-          <button class="tab-btn" role="tab" aria-selected="true"  aria-controls="tab-patient"   id="tabbtn-patient">🧾 Patient</button>
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-regimen"   id="tabbtn-regimen">🗓️ Regimen & Dates</button>
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tox"       id="tabbtn-tox">🧪 Toxicity</button>
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-decisions" id="tabbtn-decisions">⚖️ Decisions & Notes</button>
-        </div>
-
-        <form id="assessment-form" novalidate autocomplete="on">
-          <!-- ========== Patient ========== -->
-          <div class="tab-panel active" id="tab-patient" role="tabpanel" aria-labelledby="tabbtn-patient">
-            <div class="form-row">
-              <div class="form-group col-4">
-                <label for="patient_name"><span class="icon">👤</span>Name</label>
-                <input id="patient_name" name="patient_name" type="text" placeholder="e.g., Full name" autocomplete="name" />
-              </div>
-              <div class="form-group col-3">
-                <label for="patient_id"><span class="icon">#</span>ID</label>
-                <input id="patient_id" name="patient_id" type="text" placeholder="e.g., MRN" autocomplete="off" />
-              </div>
-              <div class="form-group col-3">
-                <label for="patient_phone"><span class="icon">📞</span>Phone</label>
-                <input id="patient_phone" name="patient_phone" type="tel" placeholder="+972... or 05x-xxxxxxx" autocomplete="tel" />
-              </div>
-              <div class="form-group col-1">
-                <label for="sex">Sex</label>
-                <select id="sex" name="sex" autocomplete="off">
-                  <option value="">—</option><option value="M">M</option><option value="F">F</option>
-                </select>
-              </div>
-              <div class="form-group col-1">
-                <label for="age">Age</label>
-                <input id="age" name="age" type="number" inputmode="numeric" placeholder="e.g., 55" autocomplete="off" />
-              </div>
+      <form id="assessment-form" novalidate autocomplete="on">
+        <!-- ========== Patient ========== -->
+        <div class="tab-panel active" id="tab-patient" role="tabpanel" aria-labelledby="tabbtn-patient">
+          <div class="form-row">
+            <div class="form-group col-4">
+              <label for="patient_name"><span class="icon">👤</span>Name</label>
+              <input id="patient_name" name="patient_name" type="text" placeholder="e.g., Full name" autocomplete="name" />
             </div>
-
-            <hr class="divider" />
-
-            <div class="section-title">
-              <h3>🧬 Cancer &amp; Stage</h3>
+            <div class="form-group col-3">
+              <label for="patient_id"><span class="icon">#</span>ID</label>
+              <input id="patient_id" name="patient_id" type="text" placeholder="e.g., MRN" autocomplete="off" />
             </div>
-            <div class="form-row">
-              <div class="form-group col-6">
-                <label for="diagnosis_select">Cancer type</label>
-                <select id="diagnosis_select" autocomplete="off">
-                  <option value="">Select…</option>
-                  <option>Colon</option><option>Rectal</option><option>Gastric</option>
-                  <option>Pancreatic</option><option>Breast</option><option>Head &amp; Neck</option>
-                  <option>Lung</option><option>Other</option>
-                </select>
-                <input id="diagnosis_other" type="text" placeholder="Type cancer…" style="display:none;margin-top:.4rem" />
-                <input id="diagnosis" name="diagnosis" type="hidden" />
-              </div>
-
-              <div class="form-group col-3">
-                <label for="stage">Stage</label>
-                <select id="stage" name="stage" autocomplete="off">
-                  <option value="">Select…</option><option>1</option><option>2</option><option>3</option><option>4</option>
-                </select>
-              </div>
+            <div class="form-group col-3">
+              <label for="patient_phone"><span class="icon">📞</span>Phone</label>
+              <input id="patient_phone" name="patient_phone" type="tel" placeholder="+972... or 05x-xxxxxxx" autocomplete="tel" />
+            </div>
+            <div class="form-group col-1">
+              <label for="sex">Sex</label>
+              <select id="sex" name="sex" autocomplete="off">
+                <option value="">—</option><option value="M">M</option><option value="F">F</option>
+              </select>
+            </div>
+            <div class="form-group col-1">
+              <label for="age">Age</label>
+              <input id="age" name="age" type="number" inputmode="numeric" placeholder="e.g., 55" autocomplete="off" />
             </div>
           </div>
 
-          <!-- ========== Regimen & Dates ========== -->
-          <div class="tab-panel" id="tab-regimen" role="tabpanel" aria-labelledby="tabbtn-regimen">
-            <div class="section-title">
-              <h3>🧪 Regimen &amp; Dates</h3>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-8">
-                <label for="regimen">Regimen</label>
-                <input id="regimen" name="regimen" type="text" placeholder="e.g., FOLFOX, CAPOX, 5FU infusion" autocomplete="off" />
-              </div>
-              <div class="form-group col-2">
-                <label for="assessment_date">Assessment Date</label>
-                <input id="assessment_date" name="assessment_date" type="date" autocomplete="off" />
-              </div>
-              <div class="form-group col-2">
-                <label for="cycle">Cycle</label>
-                <input id="cycle" name="cycle" type="number" inputmode="numeric" placeholder="e.g., 2" autocomplete="off" />
-              </div>
-            </div>
+          <hr class="divider" />
 
-            <div class="form-row">
-              <div class="form-group col-4">
-                <label for="first_date_5fu">1st date 5FU</label>
-                <input id="first_date_5fu" name="first_date_5fu" type="date" autocomplete="off" />
-              </div>
-            </div>
-
-            <script>
-              (function(){
-                var el = document.getElementById('first_date_5fu');
-                if (el && !el.value) {
-                  var d = new Date();
-                  var pad = function(n){ return String(n).padStart(2,'0'); };
-                  el.value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-                }
-              })();
-            </script>
-
-            <div class="form-row">
-              <div class="form-group col-6 highlight">
-                <label for="followup_due">Next phone follow-up</label>
-                <div class="flex items-center gap-2">
-                  <input id="followup_due" name="followup_due" type="date" autocomplete="off" />
-                  <button type="button" class="btn" data-nw="1">1w</button>
-                  <button type="button" class="btn" data-nw="2">2w</button>
-                  <button type="button" class="btn" data-nw="3">3w</button>
-                  <button type="button" class="btn" data-nw="4">4w</button>
-                </div>
-              </div>
-            </div>
+          <div class="section-title">
+            <h3>🧬 Cancer &amp; Stage</h3>
           </div>
-
-          <!-- ========== Toxicity (CTCAE v5.0) ========== -->
-          <div class="tab-panel" id="tab-tox" role="tabpanel" aria-labelledby="tabbtn-tox">
-            <div class="section-title">
-              <h3>🧯 Toxicity (CTCAE v5.0)</h3>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="diagnosis_select">Cancer type</label>
+              <select id="diagnosis_select" autocomplete="off">
+                <option value="">Select…</option>
+                <option>Colon</option><option>Rectal</option><option>Gastric</option>
+                <option>Pancreatic</option><option>Breast</option><option>Head &amp; Neck</option>
+                <option>Lung</option><option>Other</option>
+              </select>
+              <input id="diagnosis_other" type="text" placeholder="Type cancer…" style="display:none;margin-top:.4rem" />
+              <input id="diagnosis" name="diagnosis" type="hidden" />
             </div>
 
-            <div class="form-row">
-              <div class="form-group col-6">
-                <label for="toxicity_found">Toxicity found?</label>
-                <select id="toxicity_found" name="toxicity_found" autocomplete="off">
-                  <option value="">—</option><option>No</option><option>Yes</option>
-                </select>
-              </div>
-              <div class="form-group col-6">
-                <label for="toxicity">Overall grade</label>
-                <input id="toxicity" name="toxicity" type="text" readonly placeholder="Auto (max of below)" />
-              </div>
+            <div class="form-group col-3">
+              <label for="stage">Stage</label>
+              <select id="stage" name="stage" autocomplete="off">
+                <option value="">Select…</option><option>1</option><option>2</option><option>3</option><option>4</option>
+              </select>
             </div>
-
-            <!-- Mucositis -->
-            <div class="form-row">
-              <div class="form-group col-12">
-                <label>Mucositis</label>
-                <div class="grade-bar" data-target="mucositis_grade">
-                  <button type="button" class="grade-btn" data-grade="G0">G0</button>
-                  <button type="button" class="grade-btn" data-grade="G1">G1</button>
-                  <button type="button" class="grade-btn" data-grade="G2">G2</button>
-                  <button type="button" class="grade-btn" data-grade="G3">G3</button>
-                  <button type="button" class="grade-btn" data-grade="G4">G4</button>
-                </div>
-                <select id="mucositis_grade" name="mucositis_grade" style="display:none">
-                  <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Diarrhea -->
-            <div class="form-row">
-              <div class="form-group col-12">
-                <label>Diarrhea</label>
-                <div class="grade-bar" data-target="diarrhea_grade">
-                  <button type="button" class="grade-btn" data-grade="G0">G0</button>
-                  <button type="button" class="grade-btn" data-grade="G1">G1</button>
-                  <button type="button" class="grade-btn" data-grade="G2">G2</button>
-                  <button type="button" class="grade-btn" data-grade="G3">G3</button>
-                  <button type="button" class="grade-btn" data-grade="G4">G4</button>
-                </div>
-                <select id="diarrhea_grade" name="diarrhea_grade" style="display:none">
-                  <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Neutropenia -->
-            <div class="form-row">
-              <div class="form-group col-12">
-                <label>Neutropenia</label>
-                <div class="grade-bar" data-target="neutropenia_grade">
-                  <button type="button" class="grade-btn" data-grade="G0">G0</button>
-                  <button type="button" class="grade-btn" data-grade="G1">G1</button>
-                  <button type="button" class="grade-btn" data-grade="G2">G2</button>
-                  <button type="button" class="grade-btn" data-grade="G3">G3</button>
-                  <button type="button" class="grade-btn" data-grade="G4">G4</button>
-                </div>
-                <select id="neutropenia_grade" name="neutropenia_grade" style="display:none">
-                  <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Other toxicity -->
-            <div class="form-row">
-              <div class="form-group col-8">
-                <label for="other_tox_name">Other toxicity (name)</label>
-                <input id="other_tox_name" name="other_tox_name" type="text" placeholder="e.g., Hand-Foot" autocomplete="off" />
-              </div>
-              <div class="form-group col-4">
-                <label for="other_tox_grade">Other toxicity grade</label>
-                <select id="other_tox_grade" name="other_tox_grade" autocomplete="off">
-                  <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== Decisions & Notes ========== -->
-          <div class="tab-panel" id="tab-decisions" role="tabpanel" aria-labelledby="tabbtn-decisions">
-            <div class="section-title">
-              <h3>⚖️ Treatment decisions related to toxicity</h3>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-3">
-                <label for="hospitalization_due_tox">Hospitalization Due to Toxicity</label>
-                <select id="hospitalization_due_tox" name="hospitalization_due_tox" autocomplete="off">
-                  <option value="">—</option><option>Yes</option><option>No</option>
-                </select>
-              </div>
-              <div class="form-group col-2">
-                <label for="delay">Delay</label>
-                <select id="delay" name="delay" autocomplete="off">
-                  <option value="">—</option><option>Yes</option><option>No</option>
-                </select>
-              </div>
-              <div class="form-group col-2">
-                <label for="stop">Stop</label>
-                <select id="stop" name="stop" autocomplete="off">
-                  <option value="">—</option><option>Yes</option><option>No</option>
-                </select>
-              </div>
-              <div class="form-group col-3">
-                <label for="dose_modification">Dose modification</label>
-                <select id="dose_modification" name="dose_modification" autocomplete="off">
-                  <option value="">—</option><option>Yes</option><option>No</option>
-                </select>
-              </div>
-              <div class="form-group col-2">
-                <label for="dose_reduction_pct">Dose reduction (%)</label>
-                <input id="dose_reduction_pct" name="dose_reduction_pct" type="number" min="0" max="100" step="1" placeholder="e.g., 25" />
-              </div>
-            </div>
-
-            <hr class="divider" />
-
-            <div class="form-row">
-              <div class="form-group col-12">
-                <label for="notes"><span class="icon">📝</span>Notes</label>
-                <textarea id="notes" name="notes" rows="4" placeholder="Free text…" autocomplete="off"></textarea>
-              </div>
-            </div>
-          </div>
-        </form>
-
-        <!-- أزرار ثابتة أسفل كارد الفورم -->
-        <div class="form-sticky-actions">
-          <button type="button" id="btn-save" class="btn btn-primary cta">💾 Save Entry</button>
-          <button type="reset"  id="btn-reset" class="btn">↺ Reset Form</button>
-        </div>
-      </section>
-
-      <!-- ============== SAVED TABLE (Resizable) ============== -->
-      <section class="card table-card resizable" id="saved-card" data-resize-key="saved-card-size">
-        <div class="card-title">
-          <div class="flex items-center gap-2">
-            <span class="badge">Saved assessments</span>
           </div>
         </div>
-        <div id="saved-assessments" class="table-host"></div>
-      </section>
-    </div>
+
+        <!-- ========== Regimen & Dates ========== -->
+        <div class="tab-panel" id="tab-regimen" role="tabpanel" aria-labelledby="tabbtn-regimen">
+          <div class="section-title">
+            <h3>🧪 Regimen &amp; Dates</h3>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-8">
+              <label for="regimen">Regimen</label>
+              <input id="regimen" name="regimen" type="text" placeholder="e.g., FOLFOX, CAPOX, 5FU infusion" autocomplete="off" />
+            </div>
+            <div class="form-group col-2">
+              <label for="assessment_date">Assessment Date</label>
+              <input id="assessment_date" name="assessment_date" type="date" autocomplete="off" />
+            </div>
+            <div class="form-group col-2">
+              <label for="cycle">Cycle</label>
+              <input id="cycle" name="cycle" type="number" inputmode="numeric" placeholder="e.g., 2" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-4">
+              <label for="first_date_5fu">1st date 5FU</label>
+              <input id="first_date_5fu" name="first_date_5fu" type="date" autocomplete="off" />
+            </div>
+          </div>
+
+          <script>
+            (function(){
+              var el = document.getElementById('first_date_5fu');
+              if (el && !el.value) {
+                var d = new Date();
+                var pad = function(n){ return String(n).padStart(2,'0'); };
+                el.value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+              }
+            })();
+          </script>
+
+          <div class="form-row">
+            <div class="form-group col-6 highlight">
+              <label for="followup_due">Next phone follow-up</label>
+              <div class="flex items-center gap-2">
+                <input id="followup_due" name="followup_due" type="date" autocomplete="off" />
+                <button type="button" class="btn" data-nw="1">1w</button>
+                <button type="button" class="btn" data-nw="2">2w</button>
+                <button type="button" class="btn" data-nw="3">3w</button>
+                <button type="button" class="btn" data-nw="4">4w</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Toxicity (CTCAE v5.0) ========== -->
+        <div class="tab-panel" id="tab-tox" role="tabpanel" aria-labelledby="tabbtn-tox">
+          <div class="section-title">
+            <h3>🧯 Toxicity (CTCAE v5.0)</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="toxicity_found">Toxicity found?</label>
+              <select id="toxicity_found" name="toxicity_found" autocomplete="off">
+                <option value="">—</option><option>No</option><option>Yes</option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="toxicity">Overall grade</label>
+              <input id="toxicity" name="toxicity" type="text" readonly placeholder="Auto (max of below)" />
+            </div>
+          </div>
+
+          <!-- Mucositis -->
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label>Mucositis</label>
+              <div class="grade-bar" data-target="mucositis_grade">
+                <button type="button" class="grade-btn" data-grade="G0">G0</button>
+                <button type="button" class="grade-btn" data-grade="G1">G1</button>
+                <button type="button" class="grade-btn" data-grade="G2">G2</button>
+                <button type="button" class="grade-btn" data-grade="G3">G3</button>
+                <button type="button" class="grade-btn" data-grade="G4">G4</button>
+              </div>
+              <select id="mucositis_grade" name="mucositis_grade" style="display:none">
+                <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Diarrhea -->
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label>Diarrhea</label>
+              <div class="grade-bar" data-target="diarrhea_grade">
+                <button type="button" class="grade-btn" data-grade="G0">G0</button>
+                <button type="button" class="grade-btn" data-grade="G1">G1</button>
+                <button type="button" class="grade-btn" data-grade="G2">G2</button>
+                <button type="button" class="grade-btn" data-grade="G3">G3</button>
+                <button type="button" class="grade-btn" data-grade="G4">G4</button>
+              </div>
+              <select id="diarrhea_grade" name="diarrhea_grade" style="display:none">
+                <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Neutropenia -->
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label>Neutropenia</label>
+              <div class="grade-bar" data-target="neutropenia_grade">
+                <button type="button" class="grade-btn" data-grade="G0">G0</button>
+                <button type="button" class="grade-btn" data-grade="G1">G1</button>
+                <button type="button" class="grade-btn" data-grade="G2">G2</button>
+                <button type="button" class="grade-btn" data-grade="G3">G3</button>
+                <button type="button" class="grade-btn" data-grade="G4">G4</button>
+              </div>
+              <select id="neutropenia_grade" name="neutropenia_grade" style="display:none">
+                <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Other toxicity -->
+          <div class="form-row">
+            <div class="form-group col-8">
+              <label for="other_tox_name">Other toxicity (name)</label>
+              <input id="other_tox_name" name="other_tox_name" type="text" placeholder="e.g., Hand-Foot" autocomplete="off" />
+            </div>
+            <div class="form-group col-4">
+              <label for="other_tox_grade">Other toxicity grade</label>
+              <select id="other_tox_grade" name="other_tox_grade" autocomplete="off">
+                <option value="">—</option><option>G0</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Decisions & Notes ========== -->
+        <div class="tab-panel" id="tab-decisions" role="tabpanel" aria-labelledby="tabbtn-decisions">
+          <div class="section-title">
+            <h3>⚖️ Treatment decisions related to toxicity</h3>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-3">
+              <label for="hospitalization_due_tox">Hospitalization Due to Toxicity</label>
+              <select id="hospitalization_due_tox" name="hospitalization_due_tox" autocomplete="off">
+                <option value="">—</option><option>Yes</option><option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-2">
+              <label for="delay">Delay</label>
+              <select id="delay" name="delay" autocomplete="off">
+                <option value="">—</option><option>Yes</option><option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-2">
+              <label for="stop">Stop</label>
+              <select id="stop" name="stop" autocomplete="off">
+                <option value="">—</option><option>Yes</option><option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-3">
+              <label for="dose_modification">Dose modification</label>
+              <select id="dose_modification" name="dose_modification" autocomplete="off">
+                <option value="">—</option><option>Yes</option><option>No</option>
+              </select>
+            </div>
+            <div class="form-group col-2">
+              <label for="dose_reduction_pct">Dose reduction (%)</label>
+              <input id="dose_reduction_pct" name="dose_reduction_pct" type="number" min="0" max="100" step="1" placeholder="e.g., 25" />
+            </div>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label for="notes"><span class="icon">📝</span>Notes</label>
+              <textarea id="notes" name="notes" rows="4" placeholder="Free text…" autocomplete="off"></textarea>
+            </div>
+          </div>
+
+          <!-- تمت إزالة أزرار Save/Reset من هنا (ستظهر دائمًا أسفل الكارد) -->
+        </div>
+      </form>
+
+      <!-- أزرار ثابتة أسفل كارد الفورم (مرئية في جميع التبويبات) -->
+      <div class="form-sticky-actions">
+        <button type="button" id="btn-save" class="btn btn-primary cta">💾 Save Entry</button>
+        <button type="reset"  id="btn-reset" class="btn">↺ Reset Form</button>
+      </div>
+    </section>
+
+    <!-- ============== SAVED TABLE ============== -->
+    <section class="card table-card">
+      <div class="card-title">
+        <div class="flex items-center gap-2">
+          <span class="badge">Saved assessments</span>
+        </div>
+      </div>
+      <div id="saved-assessments" class="table-host"></div>
+    </section>
   </main>
 
   <!-- ============== Scripts (الحفاظ على الترتيب) ============== -->
@@ -389,7 +342,7 @@
   <script src="app-diagnostics.js"></script>
   <script src="app-init.js"></script>
 
-  <!-- مزامنة grade-badges + تبويبات + Defaults + قفل G0 + أزرار 1w..4w -->
+  <!-- مزامنة grade-badges + تبويبات + إعداداتك الجديدة (Defaults + قفل G0 + أزرار 1w..4w) -->
   <script>
     (function(){
       'use strict';
@@ -455,6 +408,7 @@
         });
       }
 
+      // ===== Default values: set to "No" =====
       function setDefaultNo(id){
         var el = document.getElementById(id);
         if (el && !el.value) el.value = 'No';
@@ -467,6 +421,7 @@
         setDefaultNo('toxicity_found');
       }
 
+      // ===== Lock G0 when toxicity_found = No; unlock when Yes =====
       function setGrade(targetId, grade){
         var sel = document.getElementById(targetId);
         if (!sel) return;
@@ -491,12 +446,16 @@
             setBarsDisabled(true);
           } else if (found.value === 'Yes'){
             setBarsDisabled(false);
-          } else { setBarsDisabled(false); }
+          } else {
+            // قيمة فارغة — لا نغلق
+            setBarsDisabled(false);
+          }
         };
         found.addEventListener('change', handler);
-        handler();
+        handler(); // مبدئياً
       }
 
+      // ===== Quick buttons for Next phone follow-up =====
       function initNextFollowupQuick(){
         var inp = document.getElementById('followup_due');
         if (!inp) return;
@@ -505,7 +464,7 @@
         document.querySelectorAll('[data-nw]').forEach(function(btn){
           btn.addEventListener('click', function(){
             var weeks = parseInt(btn.getAttribute('data-nw'),10)||1;
-            var d = new Date();
+            var d = new Date(); // من اليوم
             var out = toYMD(addDays(d, weeks*7));
             inp.value = out;
             inp.dispatchEvent(new Event('change', {bubbles:true}));
@@ -523,70 +482,6 @@
       });
     })();
   </script>
-
-  <!-- ===== حفظ قياس أي عنصر .resizable + نقل شريط الفلتر إلى العمود الأيسر ===== -->
-  <script>
-    (function(){
-      /* استعادة/حفظ مقاسات .resizable */
-      var els = document.querySelectorAll('.resizable[data-resize-key]');
-      if (els.length){
-        // استعادة
-        els.forEach(function(el){
-          var key = el.getAttribute('data-resize-key');
-          try{
-            var saved = JSON.parse(localStorage.getItem(key) || '{}');
-            if (saved && typeof saved === 'object'){
-              if (saved.w) el.style.width  = saved.w + 'px';
-              if (saved.h) el.style.height = saved.h + 'px';
-            }
-          }catch(e){}
-        });
-        // مراقبة وحفظ
-        if (window.ResizeObserver){
-          var ro = new ResizeObserver(function(entries){
-            for (var i=0;i<entries.length;i++){
-              var t = entries[i].target;
-              var key = t.getAttribute('data-resize-key'); if (!key) continue;
-              var rect = t.getBoundingClientRect();
-              localStorage.setItem(key, JSON.stringify({ w:Math.round(rect.width), h:Math.round(rect.height) }));
-            }
-          });
-          els.forEach(function(el){ ro.observe(el); });
-        }
-      }
-
-      /* نقل عنصر .header-bar (الذي يُبنى ديناميكيًا) إلى #filters-sidebar */
-      var host = document.getElementById('filters-sidebar');
-      if (!host) return;
-
-      // ننتظر ظهور .header-bar من سكربتاتك ثم ننقلها مرة واحدة
-      var tries = 0, maxTries = 100; // ~5 ثواني
-      var iv = setInterval(function(){
-        var hdr = document.querySelector('.header-bar');
-        if (hdr){
-          host.appendChild(hdr);
-          clearInterval(iv);
-        } else if (++tries >= maxTries){
-          clearInterval(iv);
-        }
-      }, 50);
-    })();
-  <script>
-  (function(){
-    const KEY = 'app.theme';
-    const root = document.body;
-    const saved = localStorage.getItem(KEY);
-    if (saved) root.setAttribute('data-theme', saved);
-
-    // مثال أزرار:
-    function setTheme(t){
-      root.setAttribute('data-theme', t);
-      localStorage.setItem(KEY, t);
-    }
-    // خليه عالمي لو بدك تستخدمه من أي مكان:
-    window.setAppTheme = setTheme;
-  })();
-</script>
-
+  <script src="theme-switcher.js" defer></script>
 </body>
 </html>
