@@ -28,7 +28,7 @@ body{
 /* Layout */
 .container{ max-width:1100px; margin:0 auto; padding:24px; }
 .section-title{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 8px; }
-.section-title h3{ margin:0; font-size:18px; font-weight:600; color:var(--text); } /* تكبير العناوين */
+.section-title h3{ margin:0; font-size:18px; font-weight:600; color:var(--text); }
 .muted{ color:var(--text-muted); }
 .text-lg{ font-size:20px; }
 .font-semibold{ font-weight:600; }
@@ -44,65 +44,107 @@ body{
 
 /* Cards */
 .card{
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-1); padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: 12px;
 }
 .card.soft{ background: rgba(255,255,255,0.04); border-color: var(--border); }
 
 /* Inputs */
 input[type="text"], input[type="number"], input[type="date"], select, textarea{
-  width:100%; padding:10px 12px; color: var(--text); background: var(--input-bg);
-  border:1px solid var(--border); border-radius: var(--radius-sm); outline: none; transition: border-color .15s ease, box-shadow .15s ease, background .15s;
+  width:100%;
+  padding:10px 12px;
+  color: var(--text);
+  background: var(--input-bg);
+  border:1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s;
 }
 textarea{ min-height: 90px; resize: vertical; }
 input::placeholder, textarea::placeholder{ color: var(--text-dim); }
-input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box-shadow: 0 0 0 2px rgba(109,151,115,0.25); }
-.form-group label{ display:block; margin-bottom:6px; color:var(--text-muted); font-size:12px; letter-spacing:.2px; }
+input:focus, select:focus, textarea:focus{
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(109,151,115,0.25);
+}
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  color:var(--text-muted);
+  font-size:12px;
+  letter-spacing:.2px;
+}
 
 /* Buttons */
 .btn{
   --btn-bg: var(--pill-bg); --btn-text: var(--text);
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:10px 14px; border-radius: 999px; background: var(--btn-bg); color: var(--btn-text);
-  border:1px solid var(--border); cursor:pointer; transition: transform .05s ease, background .2s ease, border-color .2s;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition: transform .05s ease, background .2s ease, border-color .2s;
 }
 .btn:hover{ transform: translateY(-1px); border-color: var(--border-strong); }
 .btn:active{ transform: translateY(0); }
-.btn-primary{ --btn-bg: var(--primary); --btn-text: #0F2A21; border-color: transparent; font-weight:600; }
+.btn-primary{
+  --btn-bg: var(--primary); --btn-text: #0F2A21;
+  border-color: transparent; font-weight:600;
+}
 .btn-primary:hover{ background: var(--primary-600); }
 .btn-primary:active{ background: var(--primary-700); }
-.btn-danger{ --btn-bg: #B33A3A; --btn-text: #fff; border-color: rgba(0,0,0,0.1); }
+.btn-danger{ --btn-bg:#B33A3A; --btn-text:#fff; border-color:rgba(0,0,0,0.1); }
 .btn-icon{ width:36px; height:36px; padding:0; border-radius:999px; font-size:18px; }
 
 /* Pills / badges */
-.pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background: var(--pill-bg); color: var(--pill-text); border:1px solid var(--border); font-size:12px; }
+.pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:var(--pill-bg); color:var(--pill-text); border:1px solid var(--border); font-size:12px; }
 .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; background:rgba(255,186,0,0.15); color:#FFD977; font-weight:600; font-size:11px; }
 
 /* Table */
-.table{ width:100%; border-collapse: separate; border-spacing:0; overflow:hidden; border-radius: var(--radius); border:1px solid var(--border); }
-.table thead th{ background: var(--table-header); color: var(--text-muted); font-weight:600; text-align:left; font-size:12px; padding:10px 12px; border-bottom:1px solid var(--border); }
-.table tbody td{ padding:10px 12px; border-bottom:1px solid var(--border); background: var(--table-row); }
+.table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing:0;
+  overflow:hidden;
+  border-radius: var(--radius);
+  border:1px solid var(--border);
+}
+.table thead th{
+  background: var(--table-header);
+  color: var(--text-muted);
+  font-weight:600;
+  text-align:left;
+  font-size:12px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+}
+.table tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  background: var(--table-row);
+}
 .table tbody tr:nth-child(even) td{ background: var(--table-row-alt); }
 .table tbody tr{ cursor: pointer; }
 
-/* Header bar (filters) — sticky فوق الجدول */
+/* Header bar */
 .header-bar{
-  position: sticky; top: 0; z-index: 50;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   background: linear-gradient(90deg, rgba(109,151,115,0.06), rgba(255,186,0,0.05));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 12px; margin-top: 8px; margin-bottom: 10px;
 }
 
-/* Filter chip */
-.filter-chip{
-  display:inline-flex; align-items:center; gap:8px;
-  background: rgba(255,186,0,0.18); color: #FFD877;
-  border:1px solid rgba(255,186,0,0.35);
-  padding: 8px 12px; border-radius: 999px; cursor: pointer; user-select:none;
-}
-.filter-chip input{ accent-color: var(--accent); }
-
-/* Modal (عام) */
+/* Modal */
 .modal-wrap{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:999; }
 .modal-overlay{ position:absolute; inset:0; background: rgba(0,0,0,0.45); }
 .modal{
@@ -110,86 +152,59 @@ input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box
   width:min(780px, calc(100vw - 28px));
   max-height: calc(100vh - 28px);
   overflow:auto; background: var(--surface);
-  border:1px solid var(--border-strong); border-radius: 22px; box-shadow: var(--shadow-2);
+  border:1px solid var(--border-strong);
+  border-radius:22px;
+  box-shadow: var(--shadow-2);
 }
-.modal-header{ position:sticky; top:0; padding:14px 16px; background: linear-gradient(180deg, var(--surface) 0%, #114336 100%); border-bottom:1px solid var(--border); border-top-left-radius: 22px; border-top-right-radius: 22px; }
+.modal-header{ position:sticky; top:0; padding:14px 16px; background: linear-gradient(180deg, var(--surface) 0%, #114336 100%); border-bottom:1px solid var(--border); border-top-left-radius:22px; border-top-right-radius:22px; }
 .modal-body{ padding:16px; }
-.modal-footer{ position:sticky; bottom:0; display:flex; gap:10px; justify-content:flex-end; padding:12px 16px; background: linear-gradient(0deg, var(--surface) 0%, #114336 100%); border-top:1px solid var(--border); border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
-
-/* Links */
-a{ color: var(--accent); text-decoration: none; }
-a:hover{ text-decoration: underline; }
+.modal-footer{ position:sticky; bottom:0; display:flex; gap:10px; justify-content:flex-end; padding:12px 16px; background: linear-gradient(0deg, var(--surface) 0%, #114336 100%); border-top:1px solid var(--border); border-bottom-left-radius:22px; border-bottom-right-radius:22px; }
 
 /* Scrollbars */
 *::-webkit-scrollbar{ width:12px; height:12px; }
-*::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.14); border-radius: 999px; border:3px solid transparent; background-clip: padding-box; }
-*::-webkit-scrollbar-track{ background: transparent; }
+*::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.14); border-radius:999px; border:3px solid transparent; background-clip:padding-box; }
+*::-webkit-scrollbar-track{ background:transparent; }
 
-/* أزرار الإجراءات المصغّرة داخل الجدول */
-.table .btn{ min-width: 36px; padding:6px 8px; }
-
-/* ==== إضافات لتثبيت عمود Name وتفعيل Scroll داخل الكارد ==== */
-
-/* حاوية جدول عامة داخل الكارد (أفقي + عمودي) */
+/* ==== Table host scroll ==== */
 .table-host{
-  overflow: auto;               /* أفقي + عمودي */
-  max-height: 420px;            /* يمنع خروج الجدول من الكارد */
-  border-radius: var(--radius);
+  overflow:auto;
+  max-height:420px;
+  border-radius:var(--radius);
 }
 
-/* دعم تعطيل grade bar عند قفل G0 */
-.grade-bar.disabled{
-  opacity: .55;
-  pointer-events: none;
-}
-
-/* شريط إجراءات ثابت أسفل كارد الفورم */
+/* Sticky form actions */
 .form-sticky-actions{
-  position: sticky;
-  bottom: -1px;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 8px;
-  margin-top: 8px;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.12));
-  border-top: 1px solid var(--border);
+  position:sticky;
+  bottom:-1px;
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  padding-top:8px;
+  margin-top:8px;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,0.12));
+  border-top:1px solid var(--border);
 }
 
-/* بادج حانب زر حفظ المودال */
-#ph_due_badge.hidden{ display:none; }
-
-/* =====================================================================
-   NEW — Resizable utility + fixes to allow horizontal resize
-   ===================================================================== */
-
-/* 1) أداة عامة: أي عنصر يحمل .resizable يصبح قابلاً للسحب من الزاوية */
+/* ===== Resizable components ===== */
 .resizable{
   resize: both;
-  overflow: auto;
-  min-width: 320px;
-  min-height: 220px;
-  position: relative;
-  /* مهم: لا نفرض عرض تلقائي 100% حتى لا يمنع التصغير */
+  overflow:auto;
+  min-width:320px;
+  min-height:220px;
+  position:relative;
 }
-
-/* تلميح بسيط في الزاوية */
 .resizable::after{
-  content: "↘ drag to resize";
-  position: absolute; right: 10px; bottom: 8px;
-  font-size: 11px; color: var(--text-dim);
-  pointer-events: none; user-select: none;
+  content:"↘ drag to resize";
+  position:absolute; right:10px; bottom:8px;
+  font-size:11px; color:var(--text-dim);
+  pointer-events:none; user-select:none;
 }
-
-/* 2) خصائص خاصة للكروت القابلة للتغيير حتى يمسك العنصر عرض مستقل */
-#saved-card.resizable,
-#form-card.resizable{
-  display: inline-block;        /* بدل block ليأخذ عرضًا مستقلاً */
-  width: min(100%, 1000px);     /* عرض ابتدائي صريح → يمكّن السحب يمين/يسار */
-  max-width: 100%;              /* لا يتجاوز حدود .container */
+#form-card.resizable,
+#saved-card.resizable{
+  display:inline-block;
+  width:min(100%,1100px);
+  max-width:150%; /* ✅ يسمح بالتوسيع حتى 150% من عرض الكونتينر */
 }
-
-/* 3) إن رغبت بتصغيره كثيرًا لا ينكسر المحتوى */
 #saved-card.resizable .table-host{
-  min-width: 600px;             /* يمنع تكسير الجدول بشكل مزعج عند التصغير */
+  min-width:600px;
 }
