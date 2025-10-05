@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="fern">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -42,7 +42,7 @@
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   </style>
 </head>
-<body data-theme="fern">
+<body>
   <header class="app-header container">
     <h1 class="text-lg">Assessment Form</h1>
     <div class="subtitle muted">Record patient toxicity and follow-up</div>
@@ -500,7 +500,7 @@
       var KEY    = "app.theme";
       var THEMES = ["fern","neon","ocean","rose","ember","mint","dawn"];
 
-      var root   = document.body;
+      var root   = document.documentElement; /* <-- مهم: نستخدم <html> */
       var host   = document.getElementById("theme-switcher");
       var toggle = document.getElementById("theme-toggle");
       var panel  = document.getElementById("theme-panel");
