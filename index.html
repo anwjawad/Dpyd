@@ -42,7 +42,7 @@
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   </style>
 </head>
-<body>
+<body data-theme="fern">
   <header class="app-header container">
     <h1 class="text-lg">Assessment Form</h1>
     <div class="subtitle muted">Record patient toxicity and follow-up</div>
@@ -295,8 +295,6 @@
               <textarea id="notes" name="notes" rows="4" placeholder="Free text…" autocomplete="off"></textarea>
             </div>
           </div>
-
-          <!-- تمت إزالة أزرار Save/Reset من هنا (ستظهر دائمًا أسفل الكارد) -->
         </div>
       </form>
 
@@ -479,29 +477,53 @@
       });
     })();
   </script>
-  <div id="theme-switcher">
-  <button class="toggle" type="button" onclick="document.getElementById('theme-switcher').classList.toggle('open')">Theme</button>
-  <div id="theme-panel">
-    <div class="row">
-      <button class="theme-chip" data-theme="fern"  onclick="setTheme('fern')">Fern</button>
-      <button class="theme-chip" data-theme="neon"  onclick="setTheme('neon')">Neon</button>
-      <button class="theme-chip" data-theme="ocean" onclick="setTheme('ocean')">Ocean</button>
-      <button class="theme-chip" data-theme="rose"  onclick="setTheme('rose')">Rose</button>
-      <button class="theme-chip" data-theme="ember" onclick="setTheme('ember')">Ember</button>
-      <button class="theme-chip" data-theme="mint"  onclick="setTheme('mint')">Mint</button>
-      <button class="theme-chip" data-theme="dawn"  onclick="setTheme('dawn')">Dawn</button>
+
+  <!-- Floating Theme Switcher -->
+  <div id="theme-switcher" aria-label="Theme switcher">
+    <button class="toggle" id="theme-toggle" type="button" onclick="document.getElementById('theme-switcher').classList.toggle('open')" aria-expanded="false" aria-controls="theme-panel">
+      Theme
+    </button>
+    <div id="theme-panel" role="menu">
+      <div class="row">
+        <button class="theme-chip" type="button" data-theme="fern" >Fern</button>
+        <button class="theme-chip" type="button" data-theme="neon" >Neon</button>
+        <button class="theme-chip" type="button" data-theme="ocean">Ocean</button>
+        <button class="theme-chip" type="button" data-theme="rose" >Rose</button>
+        <button class="theme-chip" type="button" data-theme="ember">Ember</button>
+        <button class="theme-chip" type="button" data-theme="mint" >Mint</button>
+        <button class="theme-chip" type="button" data-theme="dawn" >Dawn</button>
+      </div>
     </div>
   </div>
-</div>
-<script>
-  (function(){
-    const KEY='app.theme', root=document.body;
-    const saved=localStorage.getItem(KEY) || (root.getAttribute('data-theme')||'fern');
-    function reflect(t){ document.querySelectorAll('.theme-chip').forEach(el=>el.classList.toggle('active', el.dataset.theme===t)); }
-    window.setTheme=function(t){ root.setAttribute('data-theme', t); try{localStorage.setItem(KEY,t)}catch(e){}; reflect(t); document.getElementById('theme-switcher').classList.remove('open'); };
-    window.setTheme(saved);
-  })();
-</script>
-<body data-theme="dawn">
+
+  <!-- Theme init (persist & reflect) -->
+  <script>
+    (function(){
+      const KEY='app.theme', root=document.body, host=document.getElementById('theme-switcher');
+      const saved=localStorage.getItem(KEY) || (root.getAttribute('data-theme')||'fern');
+      function reflect(t){ document.querySelectorAll('.theme-chip').forEach(el=>el.classList.toggle('active', el.dataset.theme===t)); }
+      window.setTheme=function(t){
+        root.setAttribute('data-theme', t);
+        try{localStorage.setItem(KEY,t)}catch(e){}
+        reflect(t);
+        if (host) host.classList.remove('open');
+        const btn = document.getElementById('theme-toggle');
+        if (btn) btn.setAttribute('aria-expanded','false');
+      };
+      window.setTheme(saved);
+      document.getElementById('theme-panel').addEventListener('click', function(e){
+        const chip = e.target.closest('.theme-chip');
+        if (!chip) return;
+        window.setTheme(chip.dataset.theme);
+      });
+      document.addEventListener('click', function(e){
+        if (!host || !host.classList.contains('open')) return;
+        if (!host.contains(e.target)) host.classList.remove('open');
+      });
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && host && host.classList.contains('open')) host.classList.remove('open');
+      });
+    })();
+  </script>
 </body>
 </html>
