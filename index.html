@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>5-FU — Assessment Form</title>
   <link rel="stylesheet" href="styles.css" />
+
   <style>
     .grade-bar{ display:flex; gap:.4rem; flex-wrap:wrap; }
     .grade-btn{
@@ -40,6 +41,25 @@
     .icon{ width:16px; height:16px; display:inline-block; vertical-align:-3px; margin-right:6px; }
 
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+
+    /* ===== NEW: make the form card resizable (drag corner) ===== */
+    #form-card.resizable{
+      /* allow dragging to resize both width & height */
+      resize: both;
+      overflow: auto;                /* required for resize to appear */
+      min-width: 320px;
+      min-height: 260px;
+      max-width: 100%;               /* don't overflow the container horizontally */
+      max-height: 90vh;              /* sensible ceiling */
+      position: relative;            /* for hint position */
+    }
+    /* subtle corner hint (optional) */
+    #form-card.resizable::after{
+      content: "↘ drag to resize";
+      position: absolute; right: 10px; bottom: 8px;
+      font-size: 11px; color: var(--text-dim);
+      pointer-events: none; user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -50,7 +70,7 @@
 
   <main class="container">
     <!-- ============== FORM CARD ============== -->
-    <section class="card" id="form-card">
+    <section class="card resizable" id="form-card" data-resize-key="form-card-size">
       <!-- Tabs -->
       <div class="tabs" role="tablist" aria-label="Assessment Sections">
         <button class="tab-btn" role="tab" aria-selected="true"  aria-controls="tab-patient"   id="tabbtn-patient">🧾 Patient</button>
@@ -478,6 +498,38 @@
         initFoundLock();
         initNextFollowupQuick();
       });
+    })();
+  </script>
+
+  <!-- ===== NEW: persist the resizable card size across reloads ===== -->
+  <script>
+    (function(){
+      var el = document.getElementById('form-card');
+      if (!el) return;
+      var key = el.getAttribute('data-resize-key') || 'form-card-size';
+
+      // Restore saved size (if any)
+      try {
+        var saved = JSON.parse(localStorage.getItem(key) || '{}');
+        if (saved && typeof saved === 'object') {
+          if (saved.w) el.style.width  = saved.w + 'px';
+          if (saved.h) el.style.height = saved.h + 'px';
+        }
+      } catch(e){}
+
+      // Observe changes and save
+      if (window.ResizeObserver) {
+        var ro = new ResizeObserver(function(entries){
+          for (var i=0;i<entries.length;i++){
+            var rect = entries[i].target.getBoundingClientRect();
+            localStorage.setItem(key, JSON.stringify({
+              w: Math.round(rect.width),
+              h: Math.round(rect.height)
+            }));
+          }
+        });
+        ro.observe(el);
+      }
     })();
   </script>
 </body>
