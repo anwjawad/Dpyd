@@ -479,5 +479,28 @@
       });
     })();
   </script>
+  <div id="theme-switcher">
+  <button class="toggle" type="button" onclick="document.getElementById('theme-switcher').classList.toggle('open')">Theme</button>
+  <div id="theme-panel">
+    <div class="row">
+      <button class="theme-chip" data-theme="fern"  onclick="setTheme('fern')">Fern</button>
+      <button class="theme-chip" data-theme="neon"  onclick="setTheme('neon')">Neon</button>
+      <button class="theme-chip" data-theme="ocean" onclick="setTheme('ocean')">Ocean</button>
+      <button class="theme-chip" data-theme="rose"  onclick="setTheme('rose')">Rose</button>
+      <button class="theme-chip" data-theme="ember" onclick="setTheme('ember')">Ember</button>
+      <button class="theme-chip" data-theme="mint"  onclick="setTheme('mint')">Mint</button>
+      <button class="theme-chip" data-theme="dawn"  onclick="setTheme('dawn')">Dawn</button>
+    </div>
+  </div>
+</div>
+<script>
+  (function(){
+    const KEY='app.theme', root=document.body;
+    const saved=localStorage.getItem(KEY) || (root.getAttribute('data-theme')||'fern');
+    function reflect(t){ document.querySelectorAll('.theme-chip').forEach(el=>el.classList.toggle('active', el.dataset.theme===t)); }
+    window.setTheme=function(t){ root.setAttribute('data-theme', t); try{localStorage.setItem(KEY,t)}catch(e){}; reflect(t); document.getElementById('theme-switcher').classList.remove('open'); };
+    window.setTheme(saved);
+  })();
+</script>
 </body>
 </html>
