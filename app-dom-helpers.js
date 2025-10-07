@@ -1,6 +1,7 @@
 (function(){
   'use strict';
 
+  /* --------- Helpers --------- */
   function $(sel, root){ return (root||document).querySelector(sel); }
   function el(tag, attrs, ...children){
     const n = document.createElement(tag);
@@ -23,7 +24,7 @@
   function toText(v){ if (v==null) return ''; try { return String(v).trim(); } catch { return ''+v; } }
   function pad2(n){ return String(n).padStart(2,'0'); }
 
-  // Normalizer موحّد لعرض التواريخ
+  /* --------- Date normalize DMY --------- */
   function normalizeToDMY(val){
     if (val == null || val === '') return '';
     if (typeof val === 'string'){
@@ -40,7 +41,11 @@
     return String(val);
   }
 
-  // ====== Saved Assessments count badge ======
+  /* =========================
+     Saved Assessments — UI
+     ========================= */
+
+  // عدّاد أعلى كارد الجدول
   function ensureSavedAssessmentsBadge(){
     const titleFlex = document.querySelector('.table-card .card-title .flex');
     if (!titleFlex) return null;
@@ -58,7 +63,6 @@
     }
     return b;
   }
-
   function updateSavedAssessmentsBadge(val){
     const b = ensureSavedAssessmentsBadge();
     if (!b) return;
@@ -67,22 +71,19 @@
     b.setAttribute('aria-label', `Assessed patients count: ${text}`);
   }
 
-  // مواصفات الأعمدة — ننقل Phone/Regimen/Stage/Cancer type/Assessment date للمودال فقط
+  // أعمدة الجدول
   function headersSpec(){
     return [
-      { key:'name',            title:'Name' },                 // (Sticky + highlight)
+      { key:'name',            title:'Name' },                 // sticky
       { key:'id',              title:'ID' },
       { key:'followup_due',    title:'Next phone follow-up' },
       { key:'first_date_5fu',  title:'1st date 5FU' },
-
       { key:'mucositis_grade',   title:'Mucositis' },
       { key:'diarrhea_grade',    title:'Diarrhea' },
       { key:'neutropenia_grade', title:'Neutropenia' },
-
       { key:'_dpyd',           title:'DPYD' },
       { key:'other_tox_name',  title:'Other tox' },
       { key:'other_tox_grade', title:'Other grade' },
-
       { key:'_actions',        title:'Actions' },
     ];
   }
@@ -119,18 +120,15 @@
     return present || type || '—';
   }
 
-  // ===== Edit modal =====
+  /* ---------- Edit minimal modal (same as قبل) ---------- */
   function openEditAssessmentModal(row, onSave){
-    const modalId = 'edit_assessment_modal';
     const old = { ...row };
-    const labelId = 'edit_assessment_title';
-
-    const wrap = el('div', { class:'modal-wrap', id: modalId },
+    const wrap = el('div', { class:'modal-wrap', id:'edit_assessment_modal' },
       el('div', { class:'modal-overlay', onclick: close }),
       el('div', { class:'modal' },
         el('div', { class:'modal-header' },
           el('div', { class:'flex items-center justify-between' },
-            el('h3', { id: labelId, class:'text-lg font-semibold' }, 'Edit assessment record'),
+            el('h3', { class:'text-lg font-semibold' }, 'Edit assessment record'),
             el('button', { class:'btn btn-icon', title:'Close', onclick: close }, '×')
           )
         ),
@@ -159,7 +157,6 @@
       );
     }
     function dateField(label, id, val){
-      // نقبل إدخال date كـ YYYY-MM-DD، ونعرِض القديم كما هو في placeholder
       return el('div', { class:'form-group' },
         el('label', { for: `edit_${id}` }, label),
         el('input', { id:`edit_${id}`, type:'date', value: toYMDFromDMY(val) })
@@ -167,7 +164,6 @@
     }
     function toYMDFromDMY(v){
       if (!v) return '';
-      // v قد يكون DMY أو YMD
       const s = String(v).trim();
       const mDMY = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
       if (mDMY) return `${mDMY[3]}-${mDMY[2]}-${mDMY[1]}`;
@@ -176,7 +172,6 @@
       try{ const d=new Date(s); if(!isNaN(d)) return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }catch(_){}
       return '';
     }
-
     function close(){ if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); }
 
     document.body.appendChild(wrap);
@@ -194,7 +189,6 @@
         diagnosis: toText($('#edit_diagnosis',wrap).value),
         assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
       };
-      // فقط الحقول المتغيرة
       const changed = {};
       Object.keys(patch).forEach(k=>{
         const newVal = patch[k] || '';
@@ -229,6 +223,7 @@
     });
   }
 
+  /* ---------- Render table rows ---------- */
   function renderRows(tbody, rows, api){
     tbody.innerHTML = '';
     if (!rows || !rows.length){
@@ -274,26 +269,96 @@
     });
   }
 
-  // ===== شريط الأدوات والفلاتر =====
+  /* ---------- Filters (inside table card) ---------- */
   function buildSavedHeader(toolbarHost){
     const wrap = el('div', { class: 'table-header' });
+
+    // بحث عام
     wrap.appendChild(el('div', { class:'form-group', style:{minWidth:'220px'} },
       el('label', null, 'Filter by name / ID / phone'),
       el('input', { id:'sa_q', type:'text', placeholder:'e.g., John or 1234', autocomplete:'off' })
     ));
+
+    // تاريخ (followup_due)
     wrap.appendChild(el('div', { class:'form-group', style:{minWidth:'180px'} },
       el('label', null, 'Review date'),
       el('input', { id:'sa_date', type:'date' })
     ));
+
+    // اليوم
     wrap.appendChild(el('label', { class:'filter-chip', title:'Show only rows due today' },
       el('input', { id:'sa_today', type:'checkbox', style:{marginRight:'6px'} }),
       'Today’s follow-up'
     ));
+
+    // خلال أسبوع
+    wrap.appendChild(el('label', { class:'filter-chip', title:'Show rows due in next 7 days' },
+      el('input', { id:'sa_due7', type:'checkbox', style:{marginRight:'6px'} }),
+      'Next 7 days'
+    ));
+
+    // DPYD
+    wrap.appendChild(el('div', { class:'form-group', style:{minWidth:'160px'} },
+      el('label', null, 'DPYD'),
+      el('select', { id:'sa_dpyd' },
+        el('option', { value:'' }, 'Any'),
+        el('option', { value:'yes' }, 'Yes'),
+        el('option', { value:'no' }, 'No')
+      )
+    ));
+
+    // شدّة السمية (أعلى G)
+    wrap.appendChild(el('div', { class:'form-group', style:{minWidth:'160px'} },
+      el('label', null, 'Toxicity ≥'),
+      el('select', { id:'sa_severity' },
+        el('option', { value:'' }, 'Any'),
+        el('option', { value:'1' }, 'G1'),
+        el('option', { value:'2' }, 'G2'),
+        el('option', { value:'3' }, 'G3'),
+        el('option', { value:'4' }, 'G4')
+      )
+    ));
+
     if (toolbarHost) { toolbarHost.innerHTML=''; toolbarHost.appendChild(wrap); }
   }
 
-  function dmyToSortable(s){ const m = String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}${m[2]}${m[1]}` : '99999999'; }
-  function isTodayDMY(s){ const d=new Date(); const t=`${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; return dmyToSortable(s)===dmyToSortable(t); }
+  function dmyToSortable(s){
+    const m = String(s||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return m ? `${m[3]}${m[2]}${m[1]}` : '99999999';
+  }
+  function isTodayDMY(s){
+    const d=new Date(); const t=`${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    return dmyToSortable(s)===dmyToSortable(t);
+  }
+  function isWithinNextDaysDMY(s, days){
+    const m = String(normalizeToDMY(s)||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) return false;
+    const d = new Date(+m[3], +m[2]-1, +m[1]);
+    const now = new Date(); now.setHours(0,0,0,0);
+    const last = new Date(now); last.setDate(now.getDate()+days);
+    return d >= now && d <= last;
+  }
+  function parseYesNo(v){
+    const s = String(v||'').trim().toLowerCase();
+    if (!s) return '';
+    if (s==='yes' || s==='y' || s==='true') return 'yes';
+    if (s==='no'  || s==='n' || s==='false') return 'no';
+    return s; // أي نص آخر
+  }
+  function gradeToNum(g){
+    const m = String(g||'').trim().toUpperCase().match(/^G([0-4])$/);
+    return m ? (+m[1]) : 0;
+  }
+  function rowMaxGrade(row){
+    const list = [
+      gradeToNum(row.mucositis_grade),
+      gradeToNum(row.diarrhea_grade),
+      gradeToNum(row.neutropenia_grade),
+      gradeToNum(row.other_tox_grade),
+      gradeToNum(row.toxicity) // لو موجود
+    ];
+    return Math.max.apply(null, list);
+  }
 
   function rowMatchesFilters(row, filters){
     if (filters.q){
@@ -307,6 +372,21 @@
       if (row.followup_due !== dmy) return false;
     }
     if (filters.today){ if (!isTodayDMY(row.followup_due)) return false; }
+    if (filters.due7){ if (!isWithinNextDaysDMY(row.followup_due, 7)) return false; }
+
+    if (filters.dpyd){
+      const p = parseYesNo(row.dpyd_present);
+      if (filters.dpyd === 'yes'){
+        if (!(p==='yes' || toText(row.dpyd_type))) return false;
+      } else if (filters.dpyd === 'no'){
+        if (p==='yes' || toText(row.dpyd_type)) return false;
+      }
+    }
+
+    if (filters.severity){
+      const thr = +filters.severity;
+      if (rowMaxGrade(row) < thr) return false;
+    }
     return true;
   }
 
@@ -320,7 +400,7 @@
     return rows;
   }
 
-  // تفاصيل الصف — نعرض Phone/Regimen/Stage/Cancer type/Assessment date هنا
+  // تفاصيل الصف
   function openRowDetailsModal(row){
     const wrap = el('div', { class:'modal-wrap' },
       el('div', { class:'modal-overlay', onclick: close }),
@@ -369,10 +449,27 @@
     document.body.appendChild(wrap);
   }
 
+  /* ---------- Main render ---------- */
   function renderSavedAssessments(hostSelectors, rawRows){
-    let toolbar = $(hostSelectors.toolbar || '#saved_toolbar') || createToolbarAuto();
-    let tableHost = $(hostSelectors.table || '#saved_table') || createTableAuto();
+    // اكتشاف الـhosts الجديدة أولًا
+    let tableHost = null;
+    let toolbar   = null;
 
+    const tableCandidates = [];
+    if (hostSelectors && hostSelectors.table) tableCandidates.push(hostSelectors.table);
+    tableCandidates.push('#saved-assessments','#saved_assessments','#saved_table','#saved-table');
+    for (const sel of tableCandidates){ tableHost = $(sel); if (tableHost) break; }
+
+    const toolbarCandidates = [];
+    if (hostSelectors && hostSelectors.toolbar) toolbarCandidates.push(hostSelectors.toolbar);
+    toolbarCandidates.push('#saved-filters','#saved_filters','#saved-toolbar','#saved_toolbar');
+    for (const sel of toolbarCandidates){ toolbar = $(sel); if (toolbar) break; }
+
+    // لو لم نجد الحاويات — نتوقف بهدوء
+    if (!tableHost){ console.warn('[renderSavedAssessments] table host not found'); return; }
+    if (!toolbar){ console.warn('[renderSavedAssessments] filters host not found'); }
+
+    // تطبيع الصفوف
     const rows = (rawRows || []).map(r => {
       const c = Object.assign({}, r);
       c.assessment_date = normalizeToDMY(c.assessment_date);
@@ -383,14 +480,19 @@
       return c;
     });
 
-    buildSavedHeader(toolbar);
+    // بناء الفلاتر داخل الكارد نفسه
+    if (toolbar) buildSavedHeader(toolbar);
+
     const { tbody } = makeTableHost(tableHost);
 
-    const q     = toolbar.querySelector('#sa_q');
-    const date  = toolbar.querySelector('#sa_date');
-    const today = toolbar.querySelector('#sa_today');
+    // التقاط عناصر الفلترة
+    const q       = toolbar && toolbar.querySelector('#sa_q');
+    const date    = toolbar && toolbar.querySelector('#sa_date');
+    const today   = toolbar && toolbar.querySelector('#sa_today');
+    const due7    = toolbar && toolbar.querySelector('#sa_due7');
+    const dpydSel = toolbar && toolbar.querySelector('#sa_dpyd');
+    const sevSel  = toolbar && toolbar.querySelector('#sa_severity');
 
-    // إنشاء البادج وإظهار حالة التحميل
     updateSavedAssessmentsBadge('—');
 
     function apply(){
@@ -398,37 +500,34 @@
         q: (q && q.value || '').trim(),
         date: (date && date.value || '').trim(),
         today: !!(today && today.checked),
+        due7: !!(due7 && due7.checked),
+        dpyd: (dpydSel && dpydSel.value) || '',
+        severity: (sevSel && sevSel.value) || ''
       };
       const filtered = rows.filter(r => rowMatchesFilters(r, filters));
       sortByDueThenName(filtered);
       renderRows(tbody, filtered, api);
-      // تحديث العداد = إجمالي النتائج المطابقة (لا يوجد pagination حالياً)
       updateSavedAssessmentsBadge(filtered.length);
     }
 
     const api = {
       onEdit: (row)=> {
-        // حفظ نسخة قديمة لإمكان التراجع
         const oldRow = { ...row };
         openEditAssessmentModal(row, async (patch)=>{
           const idx = rows.findIndex(r=> String(r.id) === String(row.id));
           if (idx < 0) throw new Error('Row not found');
 
-          // تفاؤلي: طبّق التغييرات محليًا
           const updated = { ...rows[idx], ...patch };
-          // تأكد من تطبيع التاريخ للعرض
           if (patch.assessment_date) updated.assessment_date = normalizeToDMY(patch.assessment_date);
           rows[idx] = updated;
-          apply(); // إعادة الرسم/الفلترة (سيحدّث العداد أيضاً)
+          apply();
 
           try{
             if (!window.SheetsAPI || !window.SheetsAPI.updateAssessmentFields){
               throw new Error('SheetsAPI.updateAssessmentFields not available');
             }
             await window.SheetsAPI.updateAssessmentFields(row.id, patch);
-            // success — لا شيء إضافي
           }catch(e){
-            // فشل — ارجع للقيم القديمة وأعد الرسم ثم أعد رمي الخطأ ليظهر في المودال
             rows[idx] = oldRow;
             apply();
             throw e;
@@ -437,118 +536,20 @@
       }
     };
 
-    if (q)     q.addEventListener('input',  apply);
-    if (date)  date.addEventListener('change', apply);
-    if (today) today.addEventListener('change', apply);
+    if (q)       q.addEventListener('input',  apply);
+    if (date)    date.addEventListener('change', apply);
+    if (today)   today.addEventListener('change', apply);
+    if (due7)    due7.addEventListener('change', apply);
+    if (dpydSel) dpydSel.addEventListener('change', apply);
+    if (sevSel)  sevSel.addEventListener('change', apply);
 
     apply();
   }
 
-  function createToolbarAuto(){ const host = el('div', { id:'saved_toolbar', class:'header-bar container' }); document.body.prepend(host); return host; }
-  function createTableAuto(){ const host = el('div', { id:'saved_table', class:'container mt-2' }); document.body.appendChild(host); return host; }
-
-  /* =====================================================================
-     عام: جعل الكروت قابلة للتكبير/التصغير (0.8–1.5) بالسحب يمين/يسار
-     - يطبّق تلقائيًا على: #form-card, .table-card, وأي .card[data-resizable]
-     - لا يضيف الغلاف إذا كان موجودًا أصلًا (مثلاً كارد الجدول الحالي)
-     ===================================================================== */
-  function makeCardResizable(card){
-    if (!card || card.__resizable) return;
-    // لو الكارد فيه stage wrap مسبقًا نتجاهل (مثل كارد الجدول)
-    if (card.querySelector('.saved-stage-wrap')) { card.__resizable = true; return; }
-
-    const wrap  = el('div', { class: 'saved-stage-wrap', style: { marginTop: '6px' } });
-    const stage = el('div', { class: 'saved-stage' });
-
-    // انقل كل محتوى الكارد إلى داخل stage
-    while (card.firstChild){
-      stage.appendChild(card.firstChild);
-    }
-    wrap.appendChild(stage);
-
-    // مقابض السحب
-    const left  = el('div', { class:'resizer resizer-left',  title:'Drag to resize (left). Double-click to reset' });
-    const right = el('div', { class:'resizer resizer-right', title:'Drag to resize (right). Double-click to reset' });
-    wrap.appendChild(left); wrap.appendChild(right);
-
-    // أضِف الغلاف إلى الكارد
-    card.appendChild(wrap);
-
-    // لوجيك الزوم
-    const KEY = 'ui.card.scale.' + (card.id || card.className || 'card');
-    const MIN = 0.8, MAX = 1.5;
-    let scale = 1.0;
-    try{ const s = parseFloat(localStorage.getItem(KEY)); if(!isNaN(s)) scale = Math.max(MIN, Math.min(MAX, s)); }catch(_){}
-
-    function apply(s, persist){
-      scale = Math.max(MIN, Math.min(MAX, s||1));
-      stage.style.transform = 'scale(' + scale + ')';
-      // اضبط ارتفاع الغلاف ليناسب الحجم الجديد
-      const h = stage.offsetHeight;
-      wrap.style.height = Math.ceil(h * scale) + 'px';
-      if (persist){
-        try{ localStorage.setItem(KEY, String(scale)); }catch(_){}
-      }
-    }
-    window.addEventListener('resize', function(){ apply(scale, false); });
-
-    let active = null;
-    function onDown(side, ev){
-      ev.preventDefault();
-      const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
-      active = { side, startX: x, base: scale };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      document.addEventListener('touchmove', onMove, { passive:false });
-      document.addEventListener('touchend', onUp);
-    }
-    function onMove(ev){
-      if (!active) return;
-      const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
-      let dx = x - active.startX;
-      if (active.side === 'left') dx = -dx;
-      const next = active.base + (dx / 600); // ~600px تعطي ±0.5 تقريبًا
-      apply(next, false);
-    }
-    function onUp(){
-      if (!active) return;
-      apply(scale, true);
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onUp);
-      active = null;
-    }
-
-    left.addEventListener('mousedown', onDown.bind(null, 'left'));
-    right.addEventListener('mousedown', onDown.bind(null, 'right'));
-    left.addEventListener('touchstart', onDown.bind(null, 'left'));
-    right.addEventListener('touchstart', onDown.bind(null, 'right'));
-
-    // دبل-كلك لإرجاع 1.0
-    wrap.addEventListener('dblclick', function(){ apply(1.0, true); });
-
-    // تطبيق أولي
-    apply(scale, false);
-    card.__resizable = true;
-  }
-
-  function initCardResizers(){
-    const targets = new Set();
-    // افتراضيًا: كارد الفورم وكارد الجدول
-    const form = document.getElementById('form-card');
-    if (form) targets.add(form);
-    document.querySelectorAll('.table-card').forEach(c => targets.add(c));
-    // وأي كارد معلّم يدويًا
-    document.querySelectorAll('.card[data-resizable]').forEach(c => targets.add(c));
-    targets.forEach(c => makeCardResizable(c));
-  }
-
-  // كشف API بسيط إن حبّيت تناديه يدويًا
-  const DomHelpers = { renderSavedAssessments, normalizeToDMY, initCardResizers };
+  /* ---------- Public API ---------- */
+  const DomHelpers = { renderSavedAssessments, normalizeToDMY };
   if (typeof window!=='undefined') window.DomHelpers = DomHelpers;
   if (typeof module!=='undefined' && module.exports) module.exports = DomHelpers;
 
-  // تشغيل تلقائي عند جاهزية الـDOM
-  document.addEventListener('DOMContentLoaded', initCardResizers);
+  // لا تشغيل لأي ريزاين/زووم هنا — التحكم بالحجم صار CSS `resize: both`
 })();
