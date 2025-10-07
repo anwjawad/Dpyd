@@ -111,7 +111,7 @@
   --table-header:rgba(10,10,30,.06); --table-row:rgba(10,10,30,.03); --table-row-alt:rgba(10,10,30,.06);
 }
 
-/* ---------- Base + nice transitions ---------- */
+/* ---------- Base ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -125,7 +125,7 @@ body{
     box-shadow .2s ease, transform .08s ease;
 }
 
-/* ---------- Floating Theme Switcher (no external files) ---------- */
+/* ---------- Floating Theme Switcher ---------- */
 #theme-switcher{
   position: fixed; inset: auto 16px 16px auto; z-index: 3000;
   display: grid; gap: 8px; align-items: end; justify-items: end;
@@ -156,7 +156,7 @@ body{
 @media print{ #theme-switcher{ display:none !important; } }
 
 /* =====================================================================
-   YOUR ORIGINAL STYLES (kept as-is, now powered by the tokens above)
+   ORIGINAL APP STYLES + TWEAKS
    ===================================================================== */
 
 /* Layout */
@@ -182,10 +182,10 @@ body{
 }
 .card.soft{ background: rgba(255,255,255,0.04); border-color: var(--border); }
 
-/* === NEW: make any card resizable from bottom-right (no zoom) === */
+/* === Any card resizable from the bottom-right (no JS zoom) === */
 .card.resizable{
-  resize: both;               /* اسحب من الزاوية السفلية اليمنى */
-  overflow: auto;             /* لازم لخاصية resize */
+  resize: both;               /* drag bottom-right corner */
+  overflow: auto;
   min-width: 420px;
   max-width: 100%;
   min-height: 200px;
@@ -227,15 +227,6 @@ input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box
 .table tbody tr:nth-child(even) td{ background: var(--table-row-alt); }
 .table tbody tr{ cursor: pointer; }
 
-/* Header bar (filters) — كانت فوق الجدول، سنخفيها داخل الكارد */
-.header-bar{
-  position: sticky; top: 0; z-index: 50;
-  background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 20%, transparent), color-mix(in oklab, var(--accent) 16%, transparent));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 12px; margin-top: 8px; margin-bottom: 10px;
-}
-
 /* Filter chip */
 .filter-chip{
   display:inline-flex; align-items:center; gap:8px;
@@ -245,48 +236,42 @@ input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box
 }
 .filter-chip input{ accent-color: var(--accent); }
 
-/* Modal (عام) */
-.modal-wrap{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:999; }
-.modal-overlay{ position:absolute; inset:0; background: rgba(0,0,0,0.45); }
-.modal{
-  position:relative; z-index:1;
-  width:min(780px, calc(100vw - 28px));
-  max-height: calc(100vh - 28px);
-  overflow:auto; background: var(--surface);
-  border:1px solid var(--border-strong); border-radius: 22px; box-shadow: var(--shadow-2);
+/* ===== Table Filters inside the table card ===== */
+.table-card .table-header,
+.table-card .table-filters{
+  position: sticky;
+  top: 0; z-index: 25;
+  background: linear-gradient(180deg, var(--surface) 0%, color-mix(in oklab, var(--surface) 75%, var(--panel)) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin: 6px 0 10px;
+  display:flex; flex-wrap:wrap; gap:10px 12px; align-items:end;
 }
-.modal-header{ position:sticky; top:0; padding:14px 16px; background: linear-gradient(180deg, var(--surface) 0%, color-mix(in oklab, var(--surface) 75%, var(--panel)) 100%); border-bottom:1px solid var(--border); border-top-left-radius: 22px; border-top-right-radius: 22px; }
-.modal-body{ padding:16px; }
-.modal-footer{ position:sticky; bottom:0; display:flex; gap:10px; justify-content:flex-end; padding:12px 16px; background: linear-gradient(0deg, var(--surface) 0%, color-mix(in oklab, var(--surface) 75%, var(--panel)) 100%); border-top:1px solid var(--border); border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; }
+.table-card .table-header .form-group,
+.table-card .table-filters .form-group{
+  min-width: 160px;
+}
 
-/* Links */
-a{ color: var(--accent); text-decoration: none; }
-a:hover{ text-decoration: underline; }
+@media (max-width: 720px){
+  .table-card .table-header,
+  .table-card .table-filters{
+    position: static;
+  }
+}
 
-/* Scrollbars */
-*::-webkit-scrollbar{ width:12px; height:12px; }
-*::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.14); border-radius: 999px; border:3px solid transparent; background-clip: padding-box; }
-*::-webkit-scrollbar-track{ background: transparent; }
-
-/* أزرار الإجراءات المصغّرة داخل الجدول */
-.table .btn{ min-width: 36px; padding:6px 8px; }
-
-/* ==== إضافات لتثبيت عمود Name وتفعيل Scroll داخل الكارد ==== */
-
-/* حاوية جدول عامة داخل الكارد (أفقي + عمودي) */
-.table-host{
-  overflow: auto;               /* أفقي + عمودي */
-  max-height: 420px;            /* يمنع خروج الجدول من الكارد */
+/* Scroll host (around the <table>) */
+.table-host,
+.sa-scroll-host{
+  overflow: auto;
+  max-height: 420px;
   border-radius: var(--radius);
 }
 
-/* دعم تعطيل grade bar عند قفل G0 */
-.grade-bar.disabled{
-  opacity: .55;
-  pointer-events: none;
-}
+/* grade bar disabled */
+.grade-bar.disabled{ opacity: .55; pointer-events: none; }
 
-/* شريط إجراءات ثابت أسفل كارد الفورم */
+/* Sticky action bar for the form card */
 .form-sticky-actions{
   position: sticky;
   bottom: -1px;
@@ -299,45 +284,20 @@ a:hover{ text-decoration: underline; }
   border-top: 1px solid var(--border);
 }
 
-/* بادج حانب زر حفظ المودال */
-#ph_due_badge.hidden{ display:none; }
+/* Links */
+a{ color: var(--accent); text-decoration: none; }
+a:hover{ text-decoration: underline; }
 
-/* ======= Saved area layout ======= */
+/* Scrollbars */
+*::-webkit-scrollbar{ width:12px; height:12px; }
+*::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.14); border-radius: 999px; border:3px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-track{ background: transparent; }
+
+/* Small buttons inside the table rows */
+.table .btn{ min-width: 36px; padding:6px 8px; }
+
+/* ====== Legacy (not used anymore, safe to keep) ====== */
+/* Saved layout/toolbar (kept for backward compatibility but unused now) */
 :root{ --saved-toolbar-w: 92px; }
-
-.saved-layout{
-  display:grid;
-  grid-template-columns: var(--saved-toolbar-w) 1fr;
-  gap:12px;
-  align-items:start;
-}
-
-/* العمود اليسار — مربع صغير لا يغطّي المحتوى */
-.saved-toolbar{
-  position:sticky;
-  top:8px;
-  width:var(--saved-toolbar-w);
-  min-height:92px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background:var(--surface-2, rgba(255,255,255,0.04));
-  display:grid;
-  place-items:center;
-  z-index:0;
-}
-.saved-toolbar .hint{ font-size:11px; text-align:center; opacity:.75; padding:6px; }
-
-/* نجعل الفلاتر تتواجد في العمود اليسار فقط وبشكل مصغّر */
-.table-card .table-header,
-.table-card .header-bar{ display:none !important; }  /* اخفاء أي فلاتر داخل الكارد */
-
-.saved-toolbar .table-header{
-  display:grid; gap:8px; padding:8px; width:100%;
-}
-.saved-toolbar .table-header .form-group{ display:none; } /* نخفي حقول الإدخال لنبقي المربع صغير */
-.saved-toolbar .table-header .filter-chip{
-  display:flex; justify-content:center; white-space:nowrap;
-}
-
-/* ===== تجميلي بسيط للـSaved table card ===== */
-.table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.saved-layout{ display:grid; grid-template-columns: var(--saved-toolbar-w) 1fr; gap:12px; align-items:start; }
+.saved-toolbar{ display:none; } /* لم نعد نستخدم الكارد الجانبي للفلاتر */
