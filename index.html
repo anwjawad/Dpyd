@@ -6,6 +6,7 @@
   <title>5-FU — Assessment Form</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
+    /* عناصر بسيطة للصفحة الحالية فقط */
     .grade-bar{ display:flex; gap:.4rem; flex-wrap:wrap; }
     .grade-btn{
       border:1px dashed rgba(255,255,255,0.18); background:var(--input-bg); color:var(--text);
@@ -40,30 +41,6 @@
     .icon{ width:16px; height:16px; display:inline-block; vertical-align:-3px; margin-right:6px; }
 
     .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-
-    /* ===== Saved area layout ===== */
-    :root{ --saved-toolbar-w: 92px; }
-    .saved-layout{
-      display:grid;
-      grid-template-columns: var(--saved-toolbar-w) 1fr;
-      gap:12px;
-      align-items:start;
-    }
-    .saved-toolbar{
-      position:sticky;
-      top:8px;
-      width:var(--saved-toolbar-w);
-      min-height:92px; /* مربع صغير */
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:var(--surface-2, rgba(255,255,255,0.04));
-      display:grid;
-      place-items:center;
-      z-index:0; /* لا يطفو فوق الجداول */
-    }
-    .saved-toolbar .hint{
-      font-size:11px; text-align:center; opacity:.75; padding:6px;
-    }
   </style>
 </head>
 <body>
@@ -329,26 +306,20 @@
       </div>
     </section>
 
-    <!-- ============== SAVED AREA (toolbar left, card right) ============== -->
-    <div class="saved-layout">
-      <!-- Left: compact toolbar dock (square, non-overlay) -->
-      <aside id="saved-toolbar" class="saved-toolbar" aria-label="Saved toolbar">
-        <div class="hint">Toolbar</div>
-        <!-- لاحقًا سكربتاتك تحقن فلاتر/أزرار هنا -->
-      </aside>
-
-      <!-- Right: the main card (yellow box) -->
-      <section class="card resizable table-card">
-        <div class="card-title">
-          <div class="flex items-center gap-2">
-            <span class="badge">Saved assessments</span>
-          </div>
+    <!-- ============== SAVED TABLE (no side toolbar) ============== -->
+    <section class="card resizable table-card">
+      <div class="card-title">
+        <div class="flex items-center gap-2">
+          <span class="badge">Saved assessments</span>
         </div>
+      </div>
 
-        <!-- جدول الـsaved يُرسم هنا -->
-        <div id="saved-assessments" class="table-host"></div>
-      </section>
-    </div>
+      <!-- فلاتر الجدول تُرسم هنا (بدل الكارد الجانبي) -->
+      <div id="saved-filters" class="table-filters"></div>
+
+      <!-- جدول الـsaved -->
+      <div id="saved-assessments" class="table-host"></div>
+    </section>
   </main>
 
   <!-- ============== Scripts (keep order) ============== -->
