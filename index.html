@@ -39,19 +39,20 @@
 
     .icon{ width:16px; height:16px; display:inline-block; vertical-align:-3px; margin-right:6px; }
 
-    .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 
-    /* ===== Saved area layout & zoom ===== */
+    /* ===== Saved area layout ===== */
+    :root{ --saved-toolbar-w: 92px; }
     .saved-layout{
       display:grid;
-      grid-template-columns: var(--saved-toolbar-w, 92px) 1fr;
+      grid-template-columns: var(--saved-toolbar-w) 1fr;
       gap:12px;
       align-items:start;
     }
     .saved-toolbar{
       position:sticky;
       top:8px;
-      width:var(--saved-toolbar-w, 92px);
+      width:var(--saved-toolbar-w);
       min-height:92px; /* مربع صغير */
       border:1px solid var(--border);
       border-radius:12px;
@@ -63,38 +64,6 @@
     .saved-toolbar .hint{
       font-size:11px; text-align:center; opacity:.75; padding:6px;
     }
-
-    .saved-stage-wrap{
-      position:relative;
-      display:grid;
-      place-items:start center; /* يبقي المحتوى بوسط المحور الأفقي */
-      overflow:visible;
-      min-height:120px;
-    }
-    .saved-stage{
-      transform-origin: top center;
-      will-change: transform;
-    }
-
-    .resizer{
-      position:absolute; top:0; bottom:0; width:14px;
-      cursor:ew-resize; z-index:5;
-    }
-    .resizer-left{ left:-6px; }
-    .resizer-right{ right:-6px; }
-    .resizer::after{
-      content:"";
-      position:absolute; top:12px; bottom:12px; left:3px; right:3px;
-      border:1px dashed var(--border);
-      border-radius:999px;
-      opacity:.35;
-      transition:opacity .2s ease;
-      pointer-events:none;
-    }
-    .resizer:hover::after{ opacity:.7; }
-
-    /* راحة مسافات داخل البطاقة */
-    .table-card .card-title{ margin-bottom:12px; }
   </style>
 </head>
 <body>
@@ -105,7 +74,7 @@
 
   <main class="container">
     <!-- ============== FORM CARD ============== -->
-    <section class="card" id="form-card">
+    <section class="card resizable" id="form-card">
       <!-- Tabs -->
       <div class="tabs" role="tablist" aria-label="Assessment Sections">
         <button class="tab-btn" role="tab" aria-selected="true"  aria-controls="tab-patient"   id="tabbtn-patient">🧾 Patient</button>
@@ -368,22 +337,16 @@
         <!-- لاحقًا سكربتاتك تحقن فلاتر/أزرار هنا -->
       </aside>
 
-      <!-- Right: the main card (yellow box in your screenshot) -->
-      <section class="card table-card">
+      <!-- Right: the main card (yellow box) -->
+      <section class="card resizable table-card">
         <div class="card-title">
           <div class="flex items-center gap-2">
             <span class="badge">Saved assessments</span>
           </div>
         </div>
 
-        <!-- Center-scaled stage with left/right resizers -->
-        <div class="saved-stage-wrap" id="saved-stage-wrap">
-          <div class="saved-stage" id="saved-stage">
-            <div id="saved-assessments" class="table-host"></div>
-          </div>
-          <div class="resizer resizer-left"  title="Drag to resize (left)"></div>
-          <div class="resizer resizer-right" title="Drag to resize (right)"></div>
-        </div>
+        <!-- جدول الـsaved يُرسم هنا -->
+        <div id="saved-assessments" class="table-host"></div>
       </section>
     </div>
   </main>
@@ -543,70 +506,6 @@
         initFoundLock();
         initNextFollowupQuick();
       });
-    })();
-  </script>
-
-  <!-- ===== Saved table scale/resizer logic (continuous zoom out/in 0.8–1.5 + doubleclick reset) ===== -->
-  <script>
-    (function(){
-      "use strict";
-      var KEY = "ui.saved.table.scale";
-      var MIN = 0.8, MAX = 1.5;
-
-      var wrap  = document.getElementById("saved-stage-wrap");
-      var stage = document.getElementById("saved-stage");
-      if (!wrap || !stage) return;
-
-      var scale = 1.0;
-      try { var s = parseFloat(localStorage.getItem(KEY)); if (!isNaN(s)) scale = Math.max(MIN, Math.min(MAX, s)); } catch(e){}
-
-      function apply(s, persist){
-        scale = Math.max(MIN, Math.min(MAX, s||1));
-        stage.style.transform = "scale(" + scale + ")";
-        // اضبط ارتفاع الغلاف ليتناسب مع الحجم الجديد كي لا يتداخل بصريًا مع بقية الصفحة
-        var h = stage.offsetHeight; // ارتفاع غير مُحوّل
-        wrap.style.height = Math.ceil(h * scale) + "px";
-        if (persist){
-          try { localStorage.setItem(KEY, String(scale)); } catch(e){}
-        }
-      }
-
-      // أعِد حساب الارتفاع عند تغيّر حجم النافذة
-      window.addEventListener("resize", function(){ apply(scale, false); });
-
-      // سحب يمين/يسار
-      var active = null;
-      function onDown(side, ev){
-        ev.preventDefault();
-        active = { side: side, startX: ev.clientX, base: scale };
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onUp);
-      }
-      function onMove(ev){
-        if (!active) return;
-        var dx = ev.clientX - active.startX;
-        if (active.side === "left") dx = -dx; // سحب اليسار يعكس الاتجاه
-        var next = active.base + (dx / 600);   // ~600px حركة تعطي ±0.5 تقريبًا
-        apply(next, false);
-      }
-      function onUp(){
-        if (!active) return;
-        apply(scale, true);
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onUp);
-        active = null;
-      }
-
-      var left  = wrap.querySelector(".resizer-left");
-      var right = wrap.querySelector(".resizer-right");
-      if (left)  left.addEventListener("mousedown", onDown.bind(null, "left"));
-      if (right) right.addEventListener("mousedown", onDown.bind(null, "right"));
-
-      // دبل-كلك لإرجاع 1.0
-      wrap.addEventListener("dblclick", function(){ apply(1.0, true); });
-
-      // تطبيق أولي
-      apply(scale, false);
     })();
   </script>
 
