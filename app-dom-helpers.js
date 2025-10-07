@@ -447,7 +447,108 @@
   function createToolbarAuto(){ const host = el('div', { id:'saved_toolbar', class:'header-bar container' }); document.body.prepend(host); return host; }
   function createTableAuto(){ const host = el('div', { id:'saved_table', class:'container mt-2' }); document.body.appendChild(host); return host; }
 
-  const DomHelpers = { renderSavedAssessments, normalizeToDMY };
+  /* =====================================================================
+     عام: جعل الكروت قابلة للتكبير/التصغير (0.8–1.5) بالسحب يمين/يسار
+     - يطبّق تلقائيًا على: #form-card, .table-card, وأي .card[data-resizable]
+     - لا يضيف الغلاف إذا كان موجودًا أصلًا (مثلاً كارد الجدول الحالي)
+     ===================================================================== */
+  function makeCardResizable(card){
+    if (!card || card.__resizable) return;
+    // لو الكارد فيه stage wrap مسبقًا نتجاهل (مثل كارد الجدول)
+    if (card.querySelector('.saved-stage-wrap')) { card.__resizable = true; return; }
+
+    const wrap  = el('div', { class: 'saved-stage-wrap', style: { marginTop: '6px' } });
+    const stage = el('div', { class: 'saved-stage' });
+
+    // انقل كل محتوى الكارد إلى داخل stage
+    while (card.firstChild){
+      stage.appendChild(card.firstChild);
+    }
+    wrap.appendChild(stage);
+
+    // مقابض السحب
+    const left  = el('div', { class:'resizer resizer-left',  title:'Drag to resize (left). Double-click to reset' });
+    const right = el('div', { class:'resizer resizer-right', title:'Drag to resize (right). Double-click to reset' });
+    wrap.appendChild(left); wrap.appendChild(right);
+
+    // أضِف الغلاف إلى الكارد
+    card.appendChild(wrap);
+
+    // لوجيك الزوم
+    const KEY = 'ui.card.scale.' + (card.id || card.className || 'card');
+    const MIN = 0.8, MAX = 1.5;
+    let scale = 1.0;
+    try{ const s = parseFloat(localStorage.getItem(KEY)); if(!isNaN(s)) scale = Math.max(MIN, Math.min(MAX, s)); }catch(_){}
+
+    function apply(s, persist){
+      scale = Math.max(MIN, Math.min(MAX, s||1));
+      stage.style.transform = 'scale(' + scale + ')';
+      // اضبط ارتفاع الغلاف ليناسب الحجم الجديد
+      const h = stage.offsetHeight;
+      wrap.style.height = Math.ceil(h * scale) + 'px';
+      if (persist){
+        try{ localStorage.setItem(KEY, String(scale)); }catch(_){}
+      }
+    }
+    window.addEventListener('resize', function(){ apply(scale, false); });
+
+    let active = null;
+    function onDown(side, ev){
+      ev.preventDefault();
+      const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
+      active = { side, startX: x, base: scale };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove, { passive:false });
+      document.addEventListener('touchend', onUp);
+    }
+    function onMove(ev){
+      if (!active) return;
+      const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
+      let dx = x - active.startX;
+      if (active.side === 'left') dx = -dx;
+      const next = active.base + (dx / 600); // ~600px تعطي ±0.5 تقريبًا
+      apply(next, false);
+    }
+    function onUp(){
+      if (!active) return;
+      apply(scale, true);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+      active = null;
+    }
+
+    left.addEventListener('mousedown', onDown.bind(null, 'left'));
+    right.addEventListener('mousedown', onDown.bind(null, 'right'));
+    left.addEventListener('touchstart', onDown.bind(null, 'left'));
+    right.addEventListener('touchstart', onDown.bind(null, 'right'));
+
+    // دبل-كلك لإرجاع 1.0
+    wrap.addEventListener('dblclick', function(){ apply(1.0, true); });
+
+    // تطبيق أولي
+    apply(scale, false);
+    card.__resizable = true;
+  }
+
+  function initCardResizers(){
+    const targets = new Set();
+    // افتراضيًا: كارد الفورم وكارد الجدول
+    const form = document.getElementById('form-card');
+    if (form) targets.add(form);
+    document.querySelectorAll('.table-card').forEach(c => targets.add(c));
+    // وأي كارد معلّم يدويًا
+    document.querySelectorAll('.card[data-resizable]').forEach(c => targets.add(c));
+    targets.forEach(c => makeCardResizable(c));
+  }
+
+  // كشف API بسيط إن حبّيت تناديه يدويًا
+  const DomHelpers = { renderSavedAssessments, normalizeToDMY, initCardResizers };
   if (typeof window!=='undefined') window.DomHelpers = DomHelpers;
   if (typeof module!=='undefined' && module.exports) module.exports = DomHelpers;
+
+  // تشغيل تلقائي عند جاهزية الـDOM
+  document.addEventListener('DOMContentLoaded', initCardResizers);
 })();
