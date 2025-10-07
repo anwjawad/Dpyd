@@ -27,7 +27,7 @@
    * إن تركته فارغًا، ستظهر رسالة خطأ من app-sheets.js عند أول طلب شبكة.
    */
   if (typeof window.WEBAPP_URL === 'undefined') {
-    window.WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby3AVM4optqn_8nTNg4foYyP7a-teanR1XAttfXaRNTLsZjuQxXU15Gr2V_iZyInIjTFQ/exec'; // ← مثال: 'https://script.google.com/macros/s/AKfycb.../exec'
+    window.WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwfYUOgJQBT2cqG2M-VkWApU3k1h1rmXxk9HEJ6sbB4rXCxJP60HEae03nMR1J0MQcUBw/exec'; // ← مثال: 'https://script.google.com/macros/s/AKfycb.../exec'
   }
 
   /**
