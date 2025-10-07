@@ -293,3 +293,61 @@ a:hover{ text-decoration: underline; }
 
 /* بادج حانب زر حفظ المودال */
 #ph_due_badge.hidden{ display:none; }
+
+/* ======= Saved area layout & zoom controls (for Saved assessments) ======= */
+:root{ --saved-toolbar-w: 92px; }
+
+.saved-layout{
+  display:grid;
+  grid-template-columns: var(--saved-toolbar-w) 1fr;
+  gap:12px;
+  align-items:start;
+}
+
+.saved-toolbar{
+  position:sticky;
+  top:8px;
+  width:var(--saved-toolbar-w);
+  min-height:92px; /* مربع صغير */
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2, rgba(255,255,255,0.04));
+  display:grid;
+  place-items:center;
+  z-index:0; /* لا يطفو فوق الجداول */
+}
+.saved-toolbar .hint{
+  font-size:11px; text-align:center; opacity:.75; padding:6px;
+}
+
+.saved-stage-wrap{
+  position:relative;
+  display:grid;
+  place-items:start center; /* يبقي المحتوى بوسط المحور الأفقي */
+  overflow:visible;
+  min-height:120px;
+}
+.saved-stage{
+  transform-origin: top center;
+  will-change: transform;
+}
+
+.resizer{
+  position:absolute; top:0; bottom:0; width:14px;
+  cursor:ew-resize; z-index:5;
+}
+.resizer-left{ left:-6px; }
+.resizer-right{ right:-6px; }
+.resizer::after{
+  content:"";
+  position:absolute; top:12px; bottom:12px; left:3px; right:3px;
+  border:1px dashed var(--border);
+  border-radius:999px;
+  opacity:.35;
+  transition:opacity .2s ease;
+  pointer-events:none;
+}
+.resizer:hover::after{ opacity:.7; }
+
+/* Table card minor tweak */
+.table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
