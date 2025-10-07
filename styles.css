@@ -117,7 +117,6 @@ html,body{height:100%}
 body{
   margin:0; color:var(--text);
   font:14px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-  /* مهم: خلفية تعتمد على متغيرات الثيم، لا ألوان ثابتة */
   background: linear-gradient(180deg, var(--bg) 0%, color-mix(in oklab, var(--surface) 85%, var(--bg)) 100%);
 }
 *, *::before, *::after{
@@ -163,7 +162,7 @@ body{
 /* Layout */
 .container{ max-width:1100px; margin:0 auto; padding:24px; }
 .section-title{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 8px; }
-.section-title h3{ margin:0; font-size:18px; font-weight:600; color:var(--text); } /* تكبير العناوين */
+.section-title h3{ margin:0; font-size:18px; font-weight:600; color:var(--text); }
 .muted{ color:var(--text-muted); }
 .text-lg{ font-size:20px; }
 .font-semibold{ font-weight:600; }
@@ -182,6 +181,15 @@ body{
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-1); padding: 12px;
 }
 .card.soft{ background: rgba(255,255,255,0.04); border-color: var(--border); }
+
+/* === NEW: make any card resizable from bottom-right (no zoom) === */
+.card.resizable{
+  resize: both;               /* اسحب من الزاوية السفلية اليمنى */
+  overflow: auto;             /* لازم لخاصية resize */
+  min-width: 420px;
+  max-width: 100%;
+  min-height: 200px;
+}
 
 /* Inputs */
 input[type="text"], input[type="number"], input[type="date"], select, textarea{
@@ -219,7 +227,7 @@ input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box
 .table tbody tr:nth-child(even) td{ background: var(--table-row-alt); }
 .table tbody tr{ cursor: pointer; }
 
-/* Header bar (filters) — sticky فوق الجدول */
+/* Header bar (filters) — كانت فوق الجدول، سنخفيها داخل الكارد */
 .header-bar{
   position: sticky; top: 0; z-index: 50;
   background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 20%, transparent), color-mix(in oklab, var(--accent) 16%, transparent));
@@ -294,7 +302,7 @@ a:hover{ text-decoration: underline; }
 /* بادج حانب زر حفظ المودال */
 #ph_due_badge.hidden{ display:none; }
 
-/* ======= Saved area layout & zoom controls (for Saved assessments) ======= */
+/* ======= Saved area layout ======= */
 :root{ --saved-toolbar-w: 92px; }
 
 .saved-layout{
@@ -304,50 +312,32 @@ a:hover{ text-decoration: underline; }
   align-items:start;
 }
 
+/* العمود اليسار — مربع صغير لا يغطّي المحتوى */
 .saved-toolbar{
   position:sticky;
   top:8px;
   width:var(--saved-toolbar-w);
-  min-height:92px; /* مربع صغير */
+  min-height:92px;
   border:1px solid var(--border);
   border-radius:12px;
   background:var(--surface-2, rgba(255,255,255,0.04));
   display:grid;
   place-items:center;
-  z-index:0; /* لا يطفو فوق الجداول */
+  z-index:0;
 }
-.saved-toolbar .hint{
-  font-size:11px; text-align:center; opacity:.75; padding:6px;
+.saved-toolbar .hint{ font-size:11px; text-align:center; opacity:.75; padding:6px; }
+
+/* نجعل الفلاتر تتواجد في العمود اليسار فقط وبشكل مصغّر */
+.table-card .table-header,
+.table-card .header-bar{ display:none !important; }  /* اخفاء أي فلاتر داخل الكارد */
+
+.saved-toolbar .table-header{
+  display:grid; gap:8px; padding:8px; width:100%;
+}
+.saved-toolbar .table-header .form-group{ display:none; } /* نخفي حقول الإدخال لنبقي المربع صغير */
+.saved-toolbar .table-header .filter-chip{
+  display:flex; justify-content:center; white-space:nowrap;
 }
 
-.saved-stage-wrap{
-  position:relative;
-  display:grid;
-  place-items:start center; /* يبقي المحتوى بوسط المحور الأفقي */
-  overflow:visible;
-  min-height:120px;
-}
-.saved-stage{
-  transform-origin: top center;
-  will-change: transform;
-}
-
-.resizer{
-  position:absolute; top:0; bottom:0; width:14px;
-  cursor:ew-resize; z-index:5;
-}
-.resizer-left{ left:-6px; }
-.resizer-right{ right:-6px; }
-.resizer::after{
-  content:"";
-  position:absolute; top:12px; bottom:12px; left:3px; right:3px;
-  border:1px dashed var(--border);
-  border-radius:999px;
-  opacity:.35;
-  transition:opacity .2s ease;
-  pointer-events:none;
-}
-.resizer:hover::after{ opacity:.7; }
-
-/* Table card minor tweak */
+/* ===== تجميلي بسيط للـSaved table card ===== */
 .table-card .card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
