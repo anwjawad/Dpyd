@@ -360,22 +360,23 @@
       </div>
     </section>
 
-    <!-- ============== SAVED TABLE (reworked) ============== -->
-    <section class="card table-card">
-      <div class="card-title">
-        <div class="flex items-center gap-2">
-          <span class="badge">Saved assessments</span>
+    <!-- ============== SAVED AREA (toolbar left, card right) ============== -->
+    <div class="saved-layout">
+      <!-- Left: compact toolbar dock (square, non-overlay) -->
+      <aside id="saved-toolbar" class="saved-toolbar" aria-label="Saved toolbar">
+        <div class="hint">Toolbar</div>
+        <!-- لاحقًا سكربتاتك تحقن فلاتر/أزرار هنا -->
+      </aside>
+
+      <!-- Right: the main card (yellow box in your screenshot) -->
+      <section class="card table-card">
+        <div class="card-title">
+          <div class="flex items-center gap-2">
+            <span class="badge">Saved assessments</span>
+          </div>
         </div>
-      </div>
 
-      <div class="saved-layout">
-        <!-- Left: compact toolbar dock (square, non-overlay) -->
-        <aside id="saved-toolbar" class="saved-toolbar" aria-label="Saved toolbar">
-          <div class="hint">Toolbar</div>
-          <!-- بإمكان السكربتات لاحقًا تحقن أزرار/فلتر هنا -->
-        </aside>
-
-        <!-- Right: center-scaled stage with left/right resizers -->
+        <!-- Center-scaled stage with left/right resizers -->
         <div class="saved-stage-wrap" id="saved-stage-wrap">
           <div class="saved-stage" id="saved-stage">
             <div id="saved-assessments" class="table-host"></div>
@@ -383,8 +384,8 @@
           <div class="resizer resizer-left"  title="Drag to resize (left)"></div>
           <div class="resizer resizer-right" title="Drag to resize (right)"></div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <!-- ============== Scripts (keep order) ============== -->
@@ -545,12 +546,12 @@
     })();
   </script>
 
-  <!-- ===== Saved table scale/resizer logic (kept here to finish feature in one file) ===== -->
+  <!-- ===== Saved table scale/resizer logic (continuous zoom out/in 0.8–1.5 + doubleclick reset) ===== -->
   <script>
     (function(){
       "use strict";
       var KEY = "ui.saved.table.scale";
-      var MIN = 1.0, MAX = 1.5;
+      var MIN = 0.8, MAX = 1.5;
 
       var wrap  = document.getElementById("saved-stage-wrap");
       var stage = document.getElementById("saved-stage");
@@ -585,7 +586,7 @@
         if (!active) return;
         var dx = ev.clientX - active.startX;
         if (active.side === "left") dx = -dx; // سحب اليسار يعكس الاتجاه
-        var next = active.base + (dx / 600);   // ~600px حركة تعطي +0.5 تقريبًا
+        var next = active.base + (dx / 600);   // ~600px حركة تعطي ±0.5 تقريبًا
         apply(next, false);
       }
       function onUp(){
@@ -600,6 +601,9 @@
       var right = wrap.querySelector(".resizer-right");
       if (left)  left.addEventListener("mousedown", onDown.bind(null, "left"));
       if (right) right.addEventListener("mousedown", onDown.bind(null, "right"));
+
+      // دبل-كلك لإرجاع 1.0
+      wrap.addEventListener("dblclick", function(){ apply(1.0, true); });
 
       // تطبيق أولي
       apply(scale, false);
