@@ -59,7 +59,8 @@
   function paintSavedFromCache(){
     const tableSel = document.getElementById('saved-assessments') ? '#saved-assessments' : '#saved_table';
     if (window.DomHelpers && DomHelpers.renderSavedAssessments){
-      DomHelpers.renderSavedAssessments({ toolbar:'#saved_toolbar', table: tableSel }, SAVED_CACHE);
+      // مواءمة مع index.html: الـtoolbar أصبح saved-toolbar (شرطّة)
+      DomHelpers.renderSavedAssessments({ toolbar:'#saved-toolbar', table: tableSel }, SAVED_CACHE);
     }
   }
 
@@ -71,7 +72,7 @@
       const c = Object.assign({}, r);
       c.assessment_date = toDMY(c.assessment_date);
       c.followup_due    = toDMY(c.followup_due);
-      c.first_date_5fu  = toDMY(c.first_date_5fu); // NEW
+      c.first_date_5fu  = toDMY(c.first_date_5fu);
       return c;
     });
     SAVED_CACHE = mapped;
@@ -93,7 +94,7 @@
       id: row.id,
       name: row.name || '',
       followup_due: row.followup_due || '',
-      first_date_5fu: row.first_date_5fu || ''   // NEW: يُستخدم كملاحظة حمراء داخل المودال
+      first_date_5fu: row.first_date_5fu || ''   // يُستخدم كملاحظة داخل المودال
     });
   };
 
@@ -163,14 +164,14 @@
 
     // dates
     const ad = firstVal('assessment_date');
-    p.assessment_date = ad ? toDMY(ad) : todayDMY();
+    if (ad) p.assessment_date = toDMY(ad);
 
     const nextDueRaw = firstVal('followup_due','next_followup','next_phone_followup','next_due');
     if (nextDueRaw) p.followup_due = toDMY(nextDueRaw);
 
-    // NEW: 1st date 5FU — افتراضيًا اليوم إذا تُرك فارغًا
+    // 1st date 5FU — لا نرسلها إطلاقًا إلا إذا أدخلها المستخدم صراحة
     const first5fu = firstVal('first_date_5fu');
-    p.first_date_5fu = first5fu ? toDMY(first5fu) : todayDMY();
+    if (first5fu) p.first_date_5fu = toDMY(first5fu);
 
     // notes
     p.notes = firstVal('notes','assessment_notes');
@@ -190,6 +191,7 @@
         if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
         else el.value = '';
       });
+      // إن حاب تبقيه فاضي بدل اليوم، احذف الكتلة التالية:
       const fd = byId('first_date_5fu');
       if (fd && fd.type==='date'){
         const d = new Date();
@@ -220,9 +222,10 @@
         // --- Optimistic UI ---
         // كوّن صفًا محليًا من الـpayload (طبّع التواريخ)
         const optimistic = Object.assign({}, payload);
-        optimistic.assessment_date = toDMY(optimistic.assessment_date || todayDMY());
+        optimistic.assessment_date = toDMY(optimistic.assessment_date || '');
         optimistic.followup_due    = toDMY(optimistic.followup_due || '');
-        optimistic.first_date_5fu  = toDMY(optimistic.first_date_5fu || todayDMY());
+        // لا نملأ first_date_5fu افتراضيًا
+        optimistic.first_date_5fu  = toDMY(optimistic.first_date_5fu || '');
 
         // احذف أي صف قديم لنفس id ثم أضِف الجديد في أعلى القائمة
         SAVED_CACHE = SAVED_CACHE.filter(r => String(r.id||'') !== String(optimistic.id||''));
@@ -258,17 +261,21 @@
 
   // ===== إنشاء الحاويات تلقائيًا إن لم تكن موجودة =====
   function ensureHosts(){
-    let toolbar = $('#saved_toolbar');
+    // إن كان التخطيط الجديد موجود (index.html)، ما منعمل شي
+    const hasNew = !!document.getElementById('saved-assessments') && !!document.getElementById('saved-toolbar');
+    if (hasNew) return;
+
+    // fallback قديم: أنشئ فقط عند غياب كِلا الحاويتين
+    let toolbar = $('#saved-toolbar');
     let table   = $('#saved-assessments') || $('#saved_table');
-    if (!toolbar){
+    if (!toolbar && !table){
       toolbar = document.createElement('div');
-      toolbar.id = 'saved_toolbar';
+      toolbar.id = 'saved-toolbar';
       toolbar.className='header-bar container';
       document.body.prepend(toolbar);
-    }
-    if (!table){
+
       table = document.createElement('div');
-      table.id='saved_table';
+      table.id='saved-assessments';
       table.className='container mt-2';
       document.body.appendChild(table);
     }
