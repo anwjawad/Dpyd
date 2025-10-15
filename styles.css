@@ -160,7 +160,9 @@ body{
    ===================================================================== */
 
 /* Layout */
-.container{ max-width:1100px; margin:0 auto; padding:24px; }
+.container{ max-width:100%; margin:0 auto; padding:24px; }
+.container.narrow{ max-width:1100px; }
+
 .section-title{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 8px; }
 .section-title h3{ margin:0; font-size:18px; font-weight:600; color:var(--text); }
 .muted{ color:var(--text-muted); }
@@ -187,9 +189,12 @@ body{
   resize: both;               /* drag bottom-right corner */
   overflow: auto;
   min-width: 420px;
-  max-width: 100%;
+  max-width: none;           /* allow > 100% of parent width */
   min-height: 200px;
 }
+
+/* Table card as flex column so the table area can grow/shrink */
+.table-card{ display:flex; flex-direction:column; }
 
 /* Inputs */
 input[type="text"], input[type="number"], input[type="date"], select, textarea{
@@ -264,9 +269,9 @@ input:focus, select:focus, textarea:focus{ border-color: var(--input-focus); box
 .table-host,
 .sa-scroll-host{
   overflow: auto;
-  max-height: 420px;
   border-radius: var(--radius);
 }
+.sa-scroll-host{ flex:1 1 auto; max-height:none; height:auto; min-height:220px; }
 
 /* grade bar disabled */
 .grade-bar.disabled{ opacity: .55; pointer-events: none; }
@@ -339,3 +344,4 @@ a:hover{ text-decoration: underline; }
 .modal-footer{ bottom: 0; border-top: 1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
 
 /* زر الإغلاق الدائري موجود أصلاً كـ .btn.btn-icon */
+
