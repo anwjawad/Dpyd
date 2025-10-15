@@ -123,62 +123,6 @@
   /* ---------- Edit minimal modal (same as قبل) ---------- */
   function openEditAssessmentModal(row, onSave){
     const old = { ...row };
-    const wrap = el('div', { class:'modal-wrap', id:'edit_assessment_modal' },
-      el('div', { class:'modal-overlay', onclick: close }),
-      el('div', { class:'modal' },
-        el('div', { class:'modal-header' },
-          el('div', { class:'flex items-center justify-between' },
-            el('h3', { class:'text-lg font-semibold' }, 'Edit assessment record'),
-            el('button', { class:'btn btn-icon', title:'Close', onclick: close }, '×')
-          )
-        ),
-        el('div', { class:'modal-body' },
-          (function(){
-            const grid = el('div', { class:'grid', style:'grid-template-columns:repeat(2,1fr); gap:12px;' });
-            // Name / Phone
-            grid.appendChild(field('Name','name', old.name || ''));
-            grid.appendChild(field('Phone','phone', old.phone || ''));
-
-            // Regimen dropdown with Other
-            const REGIMEN_OPTIONS = [
-              'FOLFIRI','FOLFOXIRI','CapOx / XELOX','FUFOL (De Gramont)',
-              'TPF','PF','FOLFIRINOX','Capecitabine','FOLFOX'
-            ];
-            const reg = selectWithOther('Regimen','regimen', REGIMEN_OPTIONS, old.regimen || '');
-            grid.appendChild(reg.wrap);
-
-            // Stage
-            grid.appendChild(field('Stage','stage', old.stage || ''));
-
-            // Diagnosis dropdown with Other (matches main form list)
-            const DX_OPTIONS = ['Colon','Rectal','Gastric','Pancreatic','Breast','Head & Neck','Lung'];
-            const dx = selectWithOther('Cancer type','diagnosis', DX_OPTIONS, old.diagnosis || '');
-            grid.appendChild(dx.wrap);
-
-            // Assessment date
-            grid.appendChild(dateField('Assessment date','assessment_date', old.assessment_date || ''));
-
-            wrap.__getValues = function(){
-              const get = (o)=> o.sel.value === 'Other' ? (o.inp.value || '').trim() : (o.sel.value || '');
-              return {
-                name: toText($('#edit_name',wrap).value),
-                phone: toText($('#edit_phone',wrap).value),
-                regimen: get(reg),
-                stage: toText($('#edit_stage',wrap).value),
-                diagnosis: get(dx),
-                assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
-              };
-            };
-            return grid;
-          })(),
-          el('small', { id:'edit_error', class:'muted', style:{color:'#ffb3b3'} }, '')
-        ),
-        el('div', { class:'modal-footer' },
-          el('button', { class:'btn', onclick: close }, 'Cancel'),
-          el('button', { id:'edit_save_btn', class:'btn btn-primary', disabled:true }, 'Save')
-        )
-      )
-    );
 
     function field(label, id, val){
       return el('div', { class:'form-group' },
@@ -202,6 +146,7 @@
       );
       const inp = el('input', { id:`edit_${idBase}_other`, type:'text', placeholder:'Type here…', style:'display:none;margin-top:.4rem' });
 
+      // Prefill
       (function prefill(){
         const set = new Set(options.map(String));
         if (current && set.has(String(current))) {
@@ -220,7 +165,8 @@
       })();
 
       sel.addEventListener('change', function(){
-        if (sel.value === 'Other') inp.style.display = ''; else inp.style.display = 'none';
+        if (sel.value === 'Other') inp.style.display = '';
+        else inp.style.display = 'none';
       });
 
       w.appendChild(lab);
@@ -238,9 +184,64 @@
       try{ const d=new Date(s); if(!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }catch(_){}
       return '';
     }
+
+    // Build inner grid and controls first (no reference to wrap here)
+    const grid = el('div', { class:'grid', style:'grid-template-columns:repeat(2,1fr); gap:12px;' });
+    grid.appendChild(field('Name','name', old.name || ''));
+    grid.appendChild(field('Phone','phone', old.phone || ''));
+
+    const REGIMEN_OPTIONS = [
+      'FOLFIRI','FOLFOXIRI','CapOx / XELOX','FUFOL (De Gramont)',
+      'TPF','PF','FOLFIRINOX','Capecitabine','FOLFOX'
+    ];
+    const reg = selectWithOther('Regimen','regimen', REGIMEN_OPTIONS, old.regimen || '');
+    grid.appendChild(reg.wrap);
+
+    grid.appendChild(field('Stage','stage', old.stage || ''));
+
+    const DX_OPTIONS = ['Colon','Rectal','Gastric','Pancreatic','Breast','Head & Neck','Lung'];
+    const dx = selectWithOther('Cancer type','diagnosis', DX_OPTIONS, old.diagnosis || '');
+    grid.appendChild(dx.wrap);
+
+    grid.appendChild(dateField('Assessment date','assessment_date', old.assessment_date || ''));
+
+    // Now create the modal "wrap" and insert the grid
+    const wrap = el('div', { class:'modal-wrap', id:'edit_assessment_modal' },
+      el('div', { class:'modal-overlay', onclick: close }),
+      el('div', { class:'modal' },
+        el('div', { class:'modal-header' },
+          el('div', { class:'flex items-center justify-between' },
+            el('h3', { class:'text-lg font-semibold' }, 'Edit assessment record'),
+            el('button', { class:'btn btn-icon', title:'Close', onclick: close }, '×')
+          )
+        ),
+        el('div', { class:'modal-body' },
+          grid,
+          el('small', { id:'edit_error', class:'muted', style:{color:'#ffb3b3'} }, '')
+        ),
+        el('div', { class:'modal-footer' },
+          el('button', { class:'btn', onclick: close }, 'Cancel'),
+          el('button', { id:'edit_save_btn', class:'btn btn-primary', disabled:true }, 'Save')
+        )
+      )
+    );
+
     function close(){ if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); }
 
     document.body.appendChild(wrap);
+
+    // Provide getter after wrap exists
+    wrap.__getValues = function(){
+      const get = (o)=> o.sel.value === 'Other' ? (o.inp.value || '').trim() : (o.sel.value || '');
+      return {
+        name: toText($('#edit_name',wrap).value),
+        phone: toText($('#edit_phone',wrap).value),
+        regimen: get(reg),
+        stage: toText($('#edit_stage',wrap).value),
+        diagnosis: get(dx),
+        assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
+      };
+    };
 
     const btn = $('#edit_save_btn', wrap);
     const err = $('#edit_error', wrap);
