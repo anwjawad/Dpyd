@@ -122,8 +122,22 @@
           </div>
           <div class="form-row">
             <div class="form-group col-8">
-              <label for="regimen">Regimen</label>
-              <input id="regimen" name="regimen" type="text" placeholder="e.g., FOLFOX, CAPOX, 5FU infusion" autocomplete="off" />
+              <label for="regimen_select">Regimen</label>
+              <select id="regimen_select" autocomplete="off">
+                <option value="">Select…</option>
+                <option>FOLFIRI</option>
+                <option>FOLFOXIRI</option>
+                <option>CapOx / XELOX</option>
+                <option>FUFOL (De Gramont)</option>
+                <option>TPF</option>
+                <option>PF</option>
+                <option>FOLFIRINOX</option>
+                <option>Capecitabine</option>
+                <option>FOLFOX</option>
+                <option>Other</option>
+              </select>
+              <input id="regimen_other" type="text" placeholder="Type regimen…" style="display:none;margin-top:.4rem" />
+              <input id="regimen" name="regimen" type="hidden" />
             </div>
             <div class="form-group col-2">
               <label for="assessment_date">Assessment Date</label>
@@ -394,6 +408,26 @@
         update();
       }
 
+
+      function initRegimen(){
+        var sel = document.getElementById('regimen_select');
+        var inp = document.getElementById('regimen_other');
+        var hid = document.getElementById('regimen');
+        function update(){
+          var v = sel.value;
+          if (v === 'Other') {
+            inp.style.display = '';
+            hid.value = (inp.value || '').trim();
+          } else {
+            inp.style.display = 'none';
+            hid.value = v || '';
+          }
+        }
+        if (sel) sel.addEventListener('change', update);
+        if (inp) inp.addEventListener('input', update);
+        update();
+      }
+
       function initTabs(){
         const btns = Array.from(document.querySelectorAll('.tab-btn'));
         const panels = Array.from(document.querySelectorAll('.tab-panel'));
@@ -472,6 +506,7 @@
       document.addEventListener('DOMContentLoaded', function(){
         initBars();
         initDiagnosis();
+        initRegimen();
         initTabs();
         initDefaults();
         initFoundLock();
