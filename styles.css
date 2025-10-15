@@ -301,3 +301,41 @@ a:hover{ text-decoration: underline; }
 :root{ --saved-toolbar-w: 92px; }
 .saved-layout{ display:grid; grid-template-columns: var(--saved-toolbar-w) 1fr; gap:12px; align-items:start; }
 .saved-toolbar{ display:none; } /* لم نعد نستخدم الكارد الجانبي للفلاتر */
+/* ===== Modal base ===== */
+.modal-wrap{
+  position: fixed;            /* يغطي كل الشاشة */
+  inset: 0;
+  z-index: 2600;              /* أعلى من عناصر الصفحة الأخرى */
+  display: grid;
+  place-items: center;        /* يوسّط المودال */
+}
+
+.modal-overlay{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+}
+
+.modal{
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  width: min(960px, calc(100vw - 32px));
+  max-height: min(85vh, 100%);
+  overflow: auto;
+  padding: 12px;
+}
+
+/* تحسينات للرأس/الفوتر (اختياري) */
+.modal-header, .modal-footer{
+  position: sticky;
+  background: linear-gradient(180deg, var(--surface), color-mix(in oklab, var(--surface) 70%, transparent));
+  z-index: 1;
+}
+.modal-header{ top: 0; border-bottom: 1px solid var(--border); }
+.modal-footer{ bottom: 0; border-top: 1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+
+/* زر الإغلاق الدائري موجود أصلاً كـ .btn.btn-icon */
