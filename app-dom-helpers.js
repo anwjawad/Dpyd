@@ -133,14 +133,44 @@
           )
         ),
         el('div', { class:'modal-body' },
-          el('div', { class:'grid', style:'grid-template-columns:repeat(2,1fr); gap:12px;' },
-            field('Name','name', old.name || ''),
-            field('Phone','phone', old.phone || ''),
-            field('Regimen','regimen', old.regimen || ''),
-            field('Stage','stage', old.stage || ''),
-            field('Cancer type','diagnosis', old.diagnosis || ''),
-            dateField('Assessment date','assessment_date', old.assessment_date || '')
-          ),
+          (function(){
+            const grid = el('div', { class:'grid', style:'grid-template-columns:repeat(2,1fr); gap:12px;' });
+            // Name / Phone
+            grid.appendChild(field('Name','name', old.name || ''));
+            grid.appendChild(field('Phone','phone', old.phone || ''));
+
+            // Regimen dropdown with Other
+            const REGIMEN_OPTIONS = [
+              'FOLFIRI','FOLFOXIRI','CapOx / XELOX','FUFOL (De Gramont)',
+              'TPF','PF','FOLFIRINOX','Capecitabine','FOLFOX'
+            ];
+            const reg = selectWithOther('Regimen','regimen', REGIMEN_OPTIONS, old.regimen || '');
+            grid.appendChild(reg.wrap);
+
+            // Stage
+            grid.appendChild(field('Stage','stage', old.stage || ''));
+
+            // Diagnosis dropdown with Other (matches main form list)
+            const DX_OPTIONS = ['Colon','Rectal','Gastric','Pancreatic','Breast','Head & Neck','Lung'];
+            const dx = selectWithOther('Cancer type','diagnosis', DX_OPTIONS, old.diagnosis || '');
+            grid.appendChild(dx.wrap);
+
+            // Assessment date
+            grid.appendChild(dateField('Assessment date','assessment_date', old.assessment_date || ''));
+
+            wrap.__getValues = function(){
+              const get = (o)=> o.sel.value === 'Other' ? (o.inp.value || '').trim() : (o.sel.value || '');
+              return {
+                name: toText($('#edit_name',wrap).value),
+                phone: toText($('#edit_phone',wrap).value),
+                regimen: get(reg),
+                stage: toText($('#edit_stage',wrap).value),
+                diagnosis: get(dx),
+                assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
+              };
+            };
+            return grid;
+          })(),
           el('small', { id:'edit_error', class:'muted', style:{color:'#ffb3b3'} }, '')
         ),
         el('div', { class:'modal-footer' },
@@ -162,6 +192,42 @@
         el('input', { id:`edit_${id}`, type:'date', value: toYMDFromDMY(val) })
       );
     }
+    function selectWithOther(label, idBase, options, current){
+      const w = el('div', { class:'form-group' });
+      const lab = el('label', { for: `edit_${idBase}_select` }, label);
+      const sel = el('select', { id: `edit_${idBase}_select` },
+        el('option', { value:'' }, 'Select…'),
+        ...options.map(o => el('option', { value:o }, o)),
+        el('option', { value:'Other' }, 'Other')
+      );
+      const inp = el('input', { id:`edit_${idBase}_other`, type:'text', placeholder:'Type here…', style:'display:none;margin-top:.4rem' });
+
+      (function prefill(){
+        const set = new Set(options.map(String));
+        if (current && set.has(String(current))) {
+          sel.value = String(current);
+          inp.style.display = 'none';
+          inp.value = '';
+        } else if (current) {
+          sel.value = 'Other';
+          inp.style.display = '';
+          inp.value = String(current);
+        } else {
+          sel.value = '';
+          inp.style.display = 'none';
+          inp.value = '';
+        }
+      })();
+
+      sel.addEventListener('change', function(){
+        if (sel.value === 'Other') inp.style.display = ''; else inp.style.display = 'none';
+      });
+
+      w.appendChild(lab);
+      w.appendChild(sel);
+      w.appendChild(inp);
+      return { wrap:w, sel, inp };
+    }
     function toYMDFromDMY(v){
       if (!v) return '';
       const s = String(v).trim();
@@ -169,25 +235,25 @@
       if (mDMY) return `${mDMY[3]}-${mDMY[2]}-${mDMY[1]}`;
       const mYMD = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (mYMD) return s;
-      try{ const d=new Date(s); if(!isNaN(d)) return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }catch(_){}
+      try{ const d=new Date(s); if(!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }catch(_){}
       return '';
     }
     function close(){ if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); }
 
     document.body.appendChild(wrap);
 
-    const inputs = ['name','phone','regimen','stage','diagnosis','assessment_date'].map(id=>$('#edit_'+id, wrap));
     const btn = $('#edit_save_btn', wrap);
     const err = $('#edit_error', wrap);
 
     function currentPatch(){
+      const vals = wrap.__getValues ? wrap.__getValues() : {};
       const patch = {
-        name: toText($('#edit_name',wrap).value),
-        phone: toText($('#edit_phone',wrap).value),
-        regimen: toText($('#edit_regimen',wrap).value),
-        stage: toText($('#edit_stage',wrap).value),
-        diagnosis: toText($('#edit_diagnosis',wrap).value),
-        assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
+        name: toText(vals.name),
+        phone: toText(vals.phone),
+        regimen: toText(vals.regimen),
+        stage: toText(vals.stage),
+        diagnosis: toText(vals.diagnosis),
+        assessment_date: normalizeToDMY(vals.assessment_date) || old.assessment_date || ''
       };
       const changed = {};
       Object.keys(patch).forEach(k=>{
@@ -203,7 +269,8 @@
       btn.disabled = Object.keys(changed).length === 0;
       err.textContent = '';
     }
-    inputs.forEach(i=> i && i.addEventListener('input', onInputChange));
+    wrap.addEventListener('input', onInputChange);
+    wrap.addEventListener('change', onInputChange);
 
     btn.addEventListener('click', async ()=>{
       const changed = currentPatch();
