@@ -124,6 +124,7 @@
   function openEditAssessmentModal(row, onSave){
     const old = { ...row };
 
+    // Small helpers
     function field(label, id, val){
       return el('div', { class:'form-group' },
         el('label', { for: `edit_${id}` }, label),
@@ -165,8 +166,7 @@
       })();
 
       sel.addEventListener('change', function(){
-        if (sel.value === 'Other') inp.style.display = '';
-        else inp.style.display = 'none';
+        inp.style.display = (sel.value === 'Other') ? '' : 'none';
       });
 
       w.appendChild(lab);
@@ -185,7 +185,7 @@
       return '';
     }
 
-    // Build inner grid and controls first (no reference to wrap here)
+    // Build content grid first
     const grid = el('div', { class:'grid', style:'grid-template-columns:repeat(2,1fr); gap:12px;' });
     grid.appendChild(field('Name','name', old.name || ''));
     grid.appendChild(field('Phone','phone', old.phone || ''));
@@ -205,14 +205,14 @@
 
     grid.appendChild(dateField('Assessment date','assessment_date', old.assessment_date || ''));
 
-    // Now create the modal "wrap" and insert the grid
-    const wrap = el('div', { class:'modal-wrap', id:'edit_assessment_modal' },
-      el('div', { class:'modal-overlay', onclick: close }),
+    // Create modal without referencing a variable in its own initializer
+    const modalEl = el('div', { class:'modal-wrap', id:'edit_assessment_modal' },
+      el('div', { class:'modal-overlay', id:'edit_close_overlay' }),
       el('div', { class:'modal' },
         el('div', { class:'modal-header' },
           el('div', { class:'flex items-center justify-between' },
             el('h3', { class:'text-lg font-semibold' }, 'Edit assessment record'),
-            el('button', { class:'btn btn-icon', title:'Close', onclick: close }, '×')
+            el('button', { class:'btn btn-icon', id:'edit_close_btn', title:'Close' }, '×')
           )
         ),
         el('div', { class:'modal-body' },
@@ -220,34 +220,43 @@
           el('small', { id:'edit_error', class:'muted', style:{color:'#ffb3b3'} }, '')
         ),
         el('div', { class:'modal-footer' },
-          el('button', { class:'btn', onclick: close }, 'Cancel'),
+          el('button', { class:'btn', id:'edit_close_btn2' }, 'Cancel'),
           el('button', { id:'edit_save_btn', class:'btn btn-primary', disabled:true }, 'Save')
         )
       )
     );
 
-    function close(){ if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); }
+    // Append to DOM
+    document.body.appendChild(modalEl);
 
-    document.body.appendChild(wrap);
+    // Close helper
+    function closeModal(){
+      if (modalEl && modalEl.parentNode) modalEl.parentNode.removeChild(modalEl);
+    }
 
-    // Provide getter after wrap exists
-    wrap.__getValues = function(){
+    // Wire close buttons AFTER element exists
+    modalEl.querySelector('#edit_close_overlay')?.addEventListener('click', closeModal);
+    modalEl.querySelector('#edit_close_btn')?.addEventListener('click', closeModal);
+    modalEl.querySelector('#edit_close_btn2')?.addEventListener('click', closeModal);
+
+    // Getter for current values
+    modalEl.__getValues = function(){
       const get = (o)=> o.sel.value === 'Other' ? (o.inp.value || '').trim() : (o.sel.value || '');
       return {
-        name: toText($('#edit_name',wrap).value),
-        phone: toText($('#edit_phone',wrap).value),
+        name: toText($('#edit_name',modalEl).value),
+        phone: toText($('#edit_phone',modalEl).value),
         regimen: get(reg),
-        stage: toText($('#edit_stage',wrap).value),
+        stage: toText($('#edit_stage',modalEl).value),
         diagnosis: get(dx),
-        assessment_date: normalizeToDMY($('#edit_assessment_date',wrap).value) || old.assessment_date || ''
+        assessment_date: normalizeToDMY($('#edit_assessment_date',modalEl).value) || old.assessment_date || ''
       };
     };
 
-    const btn = $('#edit_save_btn', wrap);
-    const err = $('#edit_error', wrap);
+    const btn = $('#edit_save_btn', modalEl);
+    const err = $('#edit_error', modalEl);
 
     function currentPatch(){
-      const vals = wrap.__getValues ? wrap.__getValues() : {};
+      const vals = modalEl.__getValues ? modalEl.__getValues() : {};
       const patch = {
         name: toText(vals.name),
         phone: toText(vals.phone),
@@ -270,8 +279,8 @@
       btn.disabled = Object.keys(changed).length === 0;
       err.textContent = '';
     }
-    wrap.addEventListener('input', onInputChange);
-    wrap.addEventListener('change', onInputChange);
+    modalEl.addEventListener('input', onInputChange);
+    modalEl.addEventListener('change', onInputChange);
 
     btn.addEventListener('click', async ()=>{
       const changed = currentPatch();
@@ -282,7 +291,7 @@
 
       try{
         await onSave(changed);
-        close();
+        closeModal();
         alert('Record updated successfully.');
       }catch(e){
         btn.disabled = false;
