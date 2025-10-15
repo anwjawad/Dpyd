@@ -89,8 +89,8 @@
   }
 
   function makeTableHost(host){
-    const scroll = el('div', { class:'sa-scroll-host', style:{ overflow:'auto', maxHeight:'420px', borderRadius:'var(--radius)', border:'1px solid var(--border)' }});
-    const table = el('table', { class:'table', id:'sa_table', style:{ minWidth:'1100px' } });
+    const scroll = el('div', { class:'sa-scroll-host', style:{ overflow:'auto', borderRadius:'var(--radius)', border:'1px solid var(--border)', flex:'1 1 auto' }});
+    const table = el('table', { class:'table', id:'sa_table', style:{ minWidth:'900px', width:'100%' } });
     const thead = el('thead', null, el('tr', null, ...headersSpec().map((h,i)=>{
       const th = el('th', null, h.title);
       if (i === 0){
